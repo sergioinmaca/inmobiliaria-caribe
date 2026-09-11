@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { setDriveVisibility } from '../../lib/drive'
 import { MIN_IMAGES_TO_ACTIVATE } from '../../lib/constants'
 import { useSession } from '../../hooks/useSession'
 import { Badge } from '../../components/ui/Badge'
@@ -60,6 +61,9 @@ export function AdminListPage() {
       return
     }
     setMessage(null)
+    if (property.drive_folder_id) {
+      void setDriveVisibility(property.id, property.drive_folder_id, !property.is_active)
+    }
     load()
   }
 

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
@@ -34,6 +34,12 @@ export function PropertyFormPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<PropertyFormValues>({ resolver: zodResolver(propertySchema), defaultValues })
+
+  const reloadProperty = useCallback(async () => {
+    if (!id) return
+    const { data } = await supabase.from('properties').select('*').eq('id', id).single()
+    if (data) setProperty(data as Property)
+  }, [id])
 
   useEffect(() => {
     supabase
@@ -208,7 +214,7 @@ export function PropertyFormPage() {
         </Button>
       </form>
 
-      {isEdit && property && <ImageSyncSection property={property} />}
+      {isEdit && property && <ImageSyncSection property={property} onSynced={reloadProperty} />}
     </div>
   )
 }

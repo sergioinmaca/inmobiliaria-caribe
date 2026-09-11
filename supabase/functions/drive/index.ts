@@ -1,13 +1,11 @@
-// Supabase Edge Function: integración con Google Drive (cuenta de servicio).
-// Despliegue: Supabase → Edge Functions → New Function "drive" (o `supabase functions deploy drive`).
-// Secrets requeridos: SUPABASE_URL, SUPABASE_ANON_KEY (automáticos) y
-// DRIVE_SERVICE_ACCOUNT_CLIENT_EMAIL, DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY (setear en Settings → Edge Functions → Secrets).
-// Acciones: { action: 'createFolder', name } | { action: 'list', folderId } | { action: 'sync', folderId, propertyId }
+// Supabase Edge Function: integración con Google Drive vía Google Apps Script.
+// Despliegue (dashboard): Edge Functions → New Function "drive" → pegar este código.
+// Secrets requeridos: SUPABASE_URL, SUPABASE_ANON_KEY (automáticos), APPS_SCRIPT_URL, APPS_SCRIPT_SECRET.
+// Acciones: { action: 'createFolder', name } | { action: 'list', folderId }
+//         | { action: 'sync', propertyId, folderId? } | { action: 'setVisibility', propertyId, folderId? }
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { SignJWT } from 'npm:jose@5'
 
-const ROOT_FOLDER = 'catalogo_inmuebles'
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -20,76 +18,19 @@ function json(body: unknown, status = 200) {
   })
 }
 
-async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  const clean = pem
-    .replace(/\\n/g, '\n')
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s+/g, '')
-  const binary = Uint8Array.from(atob(clean), (c) => c.charCodeAt(0))
-  return crypto.subtle.importKey(
-    'pkcs8',
-    binary,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-}
+async function callScript(payload: Record<string, unknown>) {
+  const url = Deno.env.get('APPS_SCRIPT_URL')
+  const secret = Deno.env.get('APPS_SCRIPT_SECRET')
+  if (!url || !secret) return { error: 'faltan secrets de Apps Script' }
 
-async function getAccessToken(): Promise<string> {
-  const clientEmail = Deno.env.get('DRIVE_SERVICE_ACCOUNT_CLIENT_EMAIL')!
-  const privateKey = Deno.env.get('DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY')!
-  const now = Math.floor(Date.now() / 1000)
-
-  const assertion = await new SignJWT({ scope: 'https://www.googleapis.com/auth/drive' })
-    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(clientEmail)
-    .setSubject(clientEmail)
-    .setAudience('https://oauth2.googleapis.com/token')
-    .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
-    .sign(await importPrivateKey(privateKey))
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
+  const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, secret }),
   })
   const data = await res.json()
-  return data.access_token as string
-}
-
-async function getRootFolderId(token: string): Promise<string> {
-  const q = encodeURIComponent(
-    `name='${ROOT_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-  )
-  const listRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-  const list = await listRes.json()
-  if (list.files?.length) return list.files[0].id as string
-
-  const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: ROOT_FOLDER, mimeType: 'application/vnd.google-apps.folder' }),
-  })
-  const created = await createRes.json()
-  return created.id as string
-}
-
-async function listFiles(token: string, folderId: string) {
-  const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`)
-  const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=1000`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-  const data = await res.json()
-  return (data.files ?? []) as { id: string; name: string }[]
+  if (data?.error) return { error: String(data.error) }
+  return data
 }
 
 Deno.serve(async (req) => {
@@ -115,52 +56,49 @@ Deno.serve(async (req) => {
   const role = (profile as { role: string } | null)?.role
   if (role !== 'gerente' && role !== 'master') return json({ error: 'sin permisos' }, 403)
 
-  const body = await req.json()
-  const { action } = body as { action: string }
-  const token = await getAccessToken()
-
-  if (action === 'createFolder') {
-    const name = String((body as { name: string }).name)
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-    const rootId = await getRootFolderId(token)
-    const suffix = crypto.randomUUID().slice(0, 8)
-    const folderName = `${name}-${suffix}`
-    const res = await fetch('https://www.googleapis.com/drive/v3/files', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: folderName,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [rootId],
-      }),
-    })
-    const created = await res.json()
-    return json({ folderId: created.id as string, folderName })
+  const body = (await req.json()) as {
+    action: string
+    name?: string
+    folderId?: string
+    propertyId?: string
   }
 
-  if (action === 'list') {
-    const folderId = String((body as { folderId: string }).folderId)
-    const files = await listFiles(token, folderId)
-    return json({ files })
+  if (body.action === 'createFolder') {
+    const result = await callScript({ action: 'createFolder', name: body.name ?? '' })
+    if ('error' in result) return json(result, 400)
+    return json(result)
   }
 
-  if (action === 'sync') {
-    const { folderId, propertyId } = body as { folderId: string; propertyId: string }
-    const files = await listFiles(token, folderId)
-    const images = files.map((f, i) => ({
-      id: f.id,
-      url: `https://drive.google.com/uc?export=view&id=${f.id}`,
-      name: f.name,
-      order: i,
-    }))
-    const { error } = await supabase
+  if (body.action === 'list') {
+    const result = await callScript({ action: 'list', folderId: body.folderId })
+    if ('error' in result) return json(result, 400)
+    return json(result)
+  }
+
+  if (body.action === 'sync' || body.action === 'setVisibility') {
+    if (!body.propertyId) return json({ error: 'falta propertyId' }, 400)
+
+    const { data: prop } = await supabase
       .from('properties')
-      .update({ images })
-      .eq('id', propertyId)
-    if (error) return json({ error: error.message }, 500)
-    return json({ images })
+      .select('is_active, drive_folder_id')
+      .eq('id', body.propertyId)
+      .single()
+    const property = prop as { is_active: boolean; drive_folder_id: string | null } | null
+    const folderId = body.folderId ?? property?.drive_folder_id ?? ''
+    const isActive = property?.is_active ?? false
+
+    if (!folderId) return json({ error: 'sin carpeta de Drive' }, 400)
+
+    const result = await callScript({ action: body.action, folderId, isActive })
+    if ('error' in result) return json(result, 400)
+
+    if (body.action === 'sync' && 'files' in result) {
+      await supabase
+        .from('properties')
+        .update({ images: (result as { files: unknown[] }).files })
+        .eq('id', body.propertyId)
+    }
+    return json(result)
   }
 
   return json({ error: 'acción desconocida' }, 400)

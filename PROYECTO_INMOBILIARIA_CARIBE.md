@@ -134,11 +134,12 @@ public/
 3. Carga de fotos — dos vías soportadas:
    - **Manual (MVP):** el admin sube 5+ fotos a la subcarpeta de Drive.
    - **Por app (fase posterior):** el admin sube las fotos desde el formulario y el sistema las envía a Drive vía API.
-4. **Detección de desincronización:** al abrir un inmueble en el admin, una Edge Function de Supabase (cuenta de servicio de Drive) lista la carpeta y el front compara contra `properties.images[]`.
+4. **Detección de desincronización:** al abrir un inmueble en el admin, una Edge Function de Supabase llama a un **Google Apps Script** (corre bajo la cuenta Google del admin, sin Google Cloud ni tarjeta) para listar la carpeta, y el front compara contra `properties.images[]`.
 5. Si difieren → aviso: "Las imágenes de este inmueble están desincronizadas con Drive" + botón "Sincronizar imágenes" (visible solo para Gerente y Master).
-6. El sync genera las URLs directas y las guarda en Supabase (`properties.images[]`) — solo URLs, nunca archivos; Supabase Storage no se usa.
-7. El frontend consume las URLs desde Supabase, NO lista Drive directamente (para evitar rate limits).
-8. Placeholder: si un inmueble no tiene imágenes, usar `/public/brand/placeholder-property.webp`.
+6. El sync genera las URLs directas (`uc?export=view&id=…`), fija el compartir de cada foto (público si el inmueble está activo, privado si está inactivo) y guarda las URLs en Supabase (`properties.images[]`) — solo URLs, nunca archivos.
+7. **Privacidad al instante:** al desactivar un inmueble, la app pide a la Edge Function ocultar sus fotos en Drive (las deja privadas) inmediatamente.
+8. El frontend consume las URLs desde Supabase, NO lista Drive directamente (para evitar rate limits).
+9. Placeholder: si un inmueble no tiene imágenes, usar `/public/brand/placeholder-property.webp`.
 
 ## 8. Entornos de Imágenes
 1. Entorno Front (Landing Page): imágenes de presentación de la página.

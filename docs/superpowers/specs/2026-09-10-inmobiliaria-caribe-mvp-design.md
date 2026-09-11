@@ -106,11 +106,14 @@ Matriz de permisos (detallada en el documento de proyecto, sección 12):
 - Una subcarpeta por inmueble con nombre legible para humanos: `<tipo>-<zona>-<secuencial>` (ej. `apartamento-la-florida-001`)
 - La organización de carpetas la manejan los eventos del sistema (el código), no el admin
 
-**Edge Function `drive`** (Supabase, cuenta de servicio de Google):
+**Edge Function `drive`** (Supabase) → **Google Apps Script** (cuenta Google del admin, sin Google Cloud ni tarjeta):
 
 - Verifica JWT de Supabase + rol `gerente` o `master`
+- Llama al Apps Script (Web App) con un secreto compartido
+- Acción `createFolder`: crea la subcarpeta en Drive
 - Acción `list`: devuelve los archivos de la subcarpeta (id, nombre)
-- Acción `sync`: genera URLs directas y actualiza `properties.images`
+- Acción `sync`: genera URLs directas, fija el compartir según `is_active` y actualiza `properties.images`
+- Acción `setVisibility`: oculta/revela las fotos al instante al activar/desactivar
 
 **Flujo de sincronización (vía manual, MVP):**
 

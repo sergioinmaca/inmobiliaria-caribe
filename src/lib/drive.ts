@@ -19,3 +19,17 @@ export async function syncDriveFolder(folderId: string, propertyId: string): Pro
   })
   return !error
 }
+
+export async function setDriveVisibility(
+  propertyId: string,
+  folderId: string,
+  isActive: boolean,
+): Promise<void> {
+  try {
+    await supabase.functions.invoke('drive', {
+      body: { action: 'setVisibility', propertyId, folderId, isActive },
+    })
+  } catch {
+    // best-effort: si falla, el siguiente sync corrige la visibilidad
+  }
+}
