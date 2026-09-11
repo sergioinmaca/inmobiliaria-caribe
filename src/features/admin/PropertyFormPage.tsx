@@ -5,11 +5,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { supabase } from '../../lib/supabase'
+import { createDriveFolder } from '../../lib/drive'
 import { normalizePriceUsd } from '../../lib/price'
 import { PROPERTY_TYPES, ZONES } from '../../lib/constants'
-import { ImageSyncSection } from './ImageSyncSection'
+import { PropertyImagesSection } from './PropertyImagesSection'
 import { propertySchema, type PropertyFormValues } from '../../lib/propertySchema'
-import type { Property } from '../../types'
+import type { Property, PropertyImage } from '../../types'
 
 const defaultValues: PropertyFormValues = {
   title: '',
@@ -26,20 +27,46 @@ export function PropertyFormPage() {
   const navigate = useNavigate()
   const [rate, setRate] = useState(0)
   const [property, setProperty] = useState<Property | null>(null)
+  const [images, setImages] = useState<PropertyImage[]>([])
+  const [driveFolderId, setDriveFolderId] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<PropertyFormValues>({ resolver: zodResolver(propertySchema), defaultValues })
 
   const reloadProperty = useCallback(async () => {
     if (!id) return
     const { data } = await supabase.from('properties').select('*').eq('id', id).single()
-    if (data) setProperty(data as Property)
+    if (data) {
+      const p = data as Property
+      setProperty(p)
+      setImages(p.images)
+      setDriveFolderId(p.drive_folder_id)
+    }
   }, [id])
+
+  const ensureFolder = useCallback(async () => {
+    if (driveFolderId) return driveFolderId
+    const name = `${getValues('type')}-${getValues('zone')}`
+    const folderId = await createDriveFolder(name)
+    if (folderId) setDriveFolderId(folderId)
+    return folderId
+  }, [driveFolderId, getValues])
+
+  const handleImagesChange = useCallback(
+    async (next: PropertyImage[]) => {
+      setImages(next)
+      if (isEdit && id) {
+        await supabase.from('properties').update({ images: next }).eq('id', id)
+      }
+    },
+    [isEdit, id],
+  )
 
   useEffect(() => {
     supabase
@@ -65,6 +92,8 @@ export function PropertyFormPage() {
         const p = data as Property | null
         if (p) {
           setProperty(p)
+          setImages(p.images)
+          setDriveFolderId(p.drive_folder_id)
           reset({
             title: p.title,
             type: p.type,
@@ -106,19 +135,14 @@ export function PropertyFormPage() {
       return
     }
 
-    let driveFolderId: string | null = null
-    try {
-      const { data } = await supabase.functions.invoke('drive', {
-        body: { action: 'createFolder', name: `${values.type}-${values.zone}` },
-      })
-      driveFolderId = data?.folderId ?? null
-    } catch {
-      driveFolderId = null
+    let folderId = driveFolderId
+    if (!folderId) {
+      folderId = await createDriveFolder(`${values.type}-${values.zone}`)
     }
 
     const { error } = await supabase
       .from('properties')
-      .insert({ ...payload, drive_folder_id: driveFolderId })
+      .insert({ ...payload, drive_folder_id: folderId, images })
     if (error) {
       setSubmitError('Error al crear el inmueble.')
       return
@@ -214,7 +238,15 @@ export function PropertyFormPage() {
         </Button>
       </form>
 
-      {isEdit && property && <ImageSyncSection property={property} onSynced={reloadProperty} />}
+      <PropertyImagesSection
+        images={images}
+        driveFolderId={driveFolderId}
+        propertyId={id}
+        isActive={property?.is_active ?? false}
+        onChange={handleImagesChange}
+        ensureFolder={ensureFolder}
+        onSynced={reloadProperty}
+      />
     </div>
   )
 }
