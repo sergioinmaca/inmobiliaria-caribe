@@ -3,6 +3,8 @@ import { LandingPage } from '../features/LandingPage'
 import { CatalogPage } from '../features/catalog/CatalogPage'
 import { PropertyDetailPage } from '../features/catalog/PropertyDetailPage'
 import { LoginPage } from '../features/admin/LoginPage'
+import { RequireRole } from '../features/admin/RequireRole'
+import { AdminListPage } from '../features/admin/AdminListPage'
 
 export function AppRoutes() {
   return (
@@ -11,6 +13,14 @@ export function AppRoutes() {
       <Route path="/catalogo" element={<CatalogPage />} />
       <Route path="/inmueble/:id" element={<PropertyDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/admin"
+        element={
+          <RequireRole roles={['master', 'gerente', 'supervisor', 'invitado']}>
+            <AdminListPage />
+          </RequireRole>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
