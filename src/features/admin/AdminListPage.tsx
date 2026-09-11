@@ -106,40 +106,41 @@ export function AdminListPage() {
       ) : (
         <ul className="flex flex-col border-t border-neutral-300">
           {filtered.map((p) => (
-            <li key={p.id} className="flex h-44 border-b border-neutral-300 bg-white px-4 py-2">
-              <Link to={`/admin/inmueble/${p.id}`} className="block h-full w-2/5 shrink-0">
-                <img
-                  src={coverImage(p.images)?.url ?? '/brand/placeholder-property.svg'}
-                  alt={p.title}
-                  className="h-full w-full object-cover"
-                />
-              </Link>
-              <div className="flex flex-1 flex-col justify-between p-3">
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-h3 font-semibold text-neutral-900">{p.title}</h3>
-                    <Badge variant={p.is_active ? 'success' : 'default'}>
-                      {p.is_active ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </div>
-                  <p className="text-small text-neutral-500">
-                    {p.zone} · {p.type}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-body font-bold text-primary">{formatPrice(p)}</span>
-                  {canEdit && (
-                    <div className="flex items-center gap-2">
-                      <Link to={`/admin/inmueble/${p.id}`} className="text-small font-medium text-accent">
-                        Editar
-                      </Link>
-                      <Button variant={p.is_active ? 'ghost' : 'primary'} onClick={() => toggleActive(p)}>
-                        {p.is_active ? 'Desactivar' : 'Activar'}
-                      </Button>
+            <li key={p.id} className="border-b border-neutral-300 bg-white px-4 py-2">
+              <div className="flex h-44">
+                <Link to={`/admin/inmueble/${p.id}`} className="block h-full w-2/5 shrink-0">
+                  <img
+                    src={coverImage(p.images)?.url ?? '/brand/placeholder-property.svg'}
+                    alt={p.title}
+                    className="h-full w-full object-cover"
+                  />
+                </Link>
+                <div className="flex flex-1 flex-col justify-between p-3">
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-h3 font-semibold text-neutral-900">{p.title}</h3>
+                      <Badge variant={p.is_active ? 'success' : 'default'}>
+                        {p.is_active ? 'Activo' : 'Inactivo'}
+                      </Badge>
                     </div>
-                  )}
+                    <p className="text-small text-neutral-500">
+                      {p.zone} · {p.type}
+                    </p>
+                  </div>
+                  <span className="text-body font-bold text-primary">{formatPrice(p)}</span>
                 </div>
               </div>
+
+              {canEdit && (
+                <div className="flex items-center justify-end gap-2 border-t border-neutral-100 py-2">
+                  <Link to={`/admin/inmueble/${p.id}`} className="text-small font-medium text-accent">
+                    Editar
+                  </Link>
+                  <Button variant={p.is_active ? 'ghost' : 'primary'} onClick={() => toggleActive(p)}>
+                    {p.is_active ? 'Desactivar' : 'Activar'}
+                  </Button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
