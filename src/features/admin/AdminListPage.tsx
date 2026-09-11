@@ -96,7 +96,7 @@ export function AdminListPage() {
       {message && <p className="text-small text-danger">{message}</p>}
 
       {loading ? (
-        <div className="flex flex-col" data-testid="admin-skeleton">
+        <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col" data-testid="admin-skeleton">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-44 animate-pulse border-b border-neutral-300 bg-surface" />
           ))}
@@ -104,7 +104,7 @@ export function AdminListPage() {
       ) : filtered.length === 0 ? (
         <p className="py-10 text-center text-neutral-500">No hay inmuebles</p>
       ) : (
-        <ul className="flex flex-col border-t border-neutral-300">
+        <ul className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col border-t border-neutral-300">
           {filtered.map((p) => (
             <li key={p.id} className="border-b border-neutral-300 bg-white px-4 pt-2">
               <div className="flex h-44">
