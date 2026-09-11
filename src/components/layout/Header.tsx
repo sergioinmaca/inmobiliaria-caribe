@@ -8,20 +8,17 @@ interface HeaderProps {
 
 export function Header({ profile, onSignOut }: HeaderProps) {
   return (
-    <header className="flex items-center border-b border-neutral-300 bg-white px-4 py-2">
-      <div className="flex items-center" style={{ width: '85%' }}>
+    <header className="flex items-center justify-between border-b border-neutral-300 bg-white px-4 py-2">
+      <div className="flex flex-1 items-center justify-center self-stretch">
         <Link to="/" className="block">
           <img
-            src="/brand/horizontal_color.svg"
+            src="/brand/horizontal_color_v2.svg"
             alt="Inmobiliaria Municipal Caribe"
             className="h-10 w-auto"
           />
         </Link>
       </div>
-      <div
-        className="flex items-center justify-end gap-3 border-l border-neutral-300 pl-3"
-        style={{ width: '15%' }}
-      >
+      <div className="flex shrink-0 items-center gap-3 border-l border-neutral-300 pl-3">
         {profile ? (
           <>
             <Link to="/admin" className="text-small font-semibold text-primary">
@@ -36,7 +33,7 @@ export function Header({ profile, onSignOut }: HeaderProps) {
             </button>
           </>
         ) : (
-          <Link to="/login" className="text-small font-semibold text-primary">
+          <Link to="/login" className="whitespace-nowrap text-small font-semibold text-primary">
             Iniciar Sesión
           </Link>
         )}
