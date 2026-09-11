@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 export function LandingPage() {
   return (
     <div className="flex flex-col gap-8">
-      <section>
+      <section className="relative left-1/2 -mt-6 w-screen -translate-x-1/2">
         <img
-          src="/brand/banner-placeholder.svg"
+          src="/brand/banner_landing.png"
           alt="Inmobiliaria Municipal Caribe"
-          className="h-48 w-full rounded-md object-cover"
+          className="w-full"
         />
       </section>
 

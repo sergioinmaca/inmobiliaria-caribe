@@ -9,8 +9,8 @@ export function Footer() {
         />
       </div>
       <div className="self-center text-left text-[12px] text-surface">
+        <p>Inmobiliaria Municipal Caribe © {new Date().getFullYear()}</p>
         <p>RIF: G-20016595-2</p>
-        <p>© {new Date().getFullYear()} Inmobiliaria Municipal Caribe</p>
       </div>
     </footer>
   )
