@@ -100,7 +100,7 @@ function syncFolder(folderId, isActive) {
       id: f.id,
       name: f.name,
       order: i,
-      url: 'https://drive.google.com/uc?export=view&id=' + f.id,
+      url: 'https://lh3.googleusercontent.com/d/' + f.id,
     };
   });
   return { files: files };
