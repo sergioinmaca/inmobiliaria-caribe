@@ -7,6 +7,9 @@ build/
 .vite/
 coverage/
 
+# Firebase CLI local cache
+.firebase/
+
 # Environment variables (Supabase, Firebase, Google Drive keys)
 .env
 .env.local
