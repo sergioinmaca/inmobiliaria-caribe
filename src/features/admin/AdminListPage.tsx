@@ -133,7 +133,7 @@ export function AdminListPage() {
               </div>
 
               {canEdit && (
-                <div className="-mx-4 flex items-center justify-end gap-3 bg-accent px-4 py-2">
+                <div className="-mx-4 flex items-center justify-center gap-3 bg-accent px-4 py-2">
                   <Link
                     to={`/admin/inmueble/${p.id}`}
                     className="inline-flex items-center justify-center rounded-sm bg-white px-3 py-1 text-body font-medium text-primary"
