@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AdminMenu } from './AdminMenu'
 import type { Profile } from '../../types'
 
 interface HeaderProps {
@@ -7,6 +9,8 @@ interface HeaderProps {
 }
 
 export function Header({ profile, onSignOut }: HeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <header className="flex items-center justify-between border-b border-neutral-300 bg-white px-4 py-2">
       <div className="flex flex-1 items-center justify-center self-stretch">
@@ -21,15 +25,19 @@ export function Header({ profile, onSignOut }: HeaderProps) {
       <div className="flex shrink-0 items-center gap-3 border-l border-neutral-300 pl-3">
         {profile ? (
           <>
-            <Link to="/admin" className="text-small font-semibold text-primary">
-              {profile.full_name}
-            </Link>
+            <div className="flex flex-col leading-tight">
+              <span className="text-small font-semibold text-neutral-900">{profile.first_name}</span>
+              <span className="text-small text-neutral-500">{profile.last_name}</span>
+            </div>
             <button
               type="button"
-              onClick={onSignOut}
-              className="text-small text-neutral-500 underline"
+              aria-label="Abrir menú"
+              onClick={() => setMenuOpen(true)}
+              className="flex flex-col gap-1"
             >
-              Salir
+              <span className="block h-0.5 w-5 bg-primary" />
+              <span className="block h-0.5 w-5 bg-primary" />
+              <span className="block h-0.5 w-5 bg-primary" />
             </button>
           </>
         ) : (
@@ -38,6 +46,14 @@ export function Header({ profile, onSignOut }: HeaderProps) {
           </Link>
         )}
       </div>
+      {profile && (
+        <AdminMenu
+          open={menuOpen}
+          profile={profile}
+          onClose={() => setMenuOpen(false)}
+          onSignOut={onSignOut ?? (() => {})}
+        />
+      )}
     </header>
   )
 }
