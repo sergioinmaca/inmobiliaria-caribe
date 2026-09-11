@@ -14,7 +14,8 @@ export function AdminListPage() {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<string | null>(null)
 
-  const isViewOnly = profile?.role === 'invitado'
+  const canEdit = ['master', 'gerente', 'supervisor'].includes(profile?.role ?? '')
+  const canCreate = ['master', 'gerente'].includes(profile?.role ?? '')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -66,7 +67,7 @@ export function AdminListPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-h2 font-bold text-primary">Inmuebles</h1>
-        {!isViewOnly && (
+        {canCreate && (
           <Link
             to="/admin/inmueble"
             className="inline-flex items-center justify-center rounded-sm bg-primary px-4 py-2 text-body font-medium text-white"
@@ -115,7 +116,7 @@ export function AdminListPage() {
               <Badge variant={p.is_active ? 'success' : 'default'}>
                 {p.is_active ? 'Activo' : 'Inactivo'}
               </Badge>
-              {!isViewOnly && (
+              {canEdit && (
                 <div className="flex items-center gap-2">
                   <Link to={`/admin/inmueble/${p.id}`} className="text-small font-medium text-accent">
                     Editar

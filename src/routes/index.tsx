@@ -5,6 +5,8 @@ import { PropertyDetailPage } from '../features/catalog/PropertyDetailPage'
 import { LoginPage } from '../features/admin/LoginPage'
 import { RequireRole } from '../features/admin/RequireRole'
 import { AdminListPage } from '../features/admin/AdminListPage'
+import { PropertyFormPage } from '../features/admin/PropertyFormPage'
+import { UsersPage } from '../features/admin/UsersPage'
 
 export function AppRoutes() {
   return (
@@ -18,6 +20,30 @@ export function AppRoutes() {
         element={
           <RequireRole roles={['master', 'gerente', 'supervisor', 'invitado']}>
             <AdminListPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/inmueble"
+        element={
+          <RequireRole roles={['master', 'gerente']}>
+            <PropertyFormPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/inmueble/:id"
+        element={
+          <RequireRole roles={['master', 'gerente', 'supervisor']}>
+            <PropertyFormPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/usuarios"
+        element={
+          <RequireRole roles={['master']}>
+            <UsersPage />
           </RequireRole>
         }
       />
