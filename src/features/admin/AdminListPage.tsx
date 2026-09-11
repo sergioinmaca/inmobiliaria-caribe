@@ -106,7 +106,7 @@ export function AdminListPage() {
       ) : (
         <ul className="flex flex-col border-t border-neutral-300">
           {filtered.map((p) => (
-            <li key={p.id} className="border-b border-neutral-300 bg-white px-4 py-2">
+            <li key={p.id} className="border-b border-neutral-300 bg-white px-4 pt-2">
               <div className="flex h-44">
                 <Link to={`/admin/inmueble/${p.id}`} className="relative block h-full w-2/5 shrink-0">
                   <img
@@ -133,8 +133,8 @@ export function AdminListPage() {
               </div>
 
               {canEdit && (
-                <div className="flex items-center justify-end gap-2 border-t border-neutral-100 py-2">
-                  <Link to={`/admin/inmueble/${p.id}`} className="text-small font-medium text-accent">
+                <div className="-mx-4 flex items-center justify-end gap-2 bg-accent px-4 py-2">
+                  <Link to={`/admin/inmueble/${p.id}`} className="text-small font-medium text-white">
                     Editar
                   </Link>
                   <Button variant={p.is_active ? 'ghost' : 'primary'} onClick={() => toggleActive(p)}>
