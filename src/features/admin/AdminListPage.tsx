@@ -134,10 +134,10 @@ export function AdminListPage() {
 
               {canEdit && (
                 <div className="-mx-4 flex items-center justify-end gap-2 bg-accent px-4 py-2">
-                  <Link to={`/admin/inmueble/${p.id}`} className="text-small font-medium text-white">
+                  <Link to={`/admin/inmueble/${p.id}`} className="text-body font-medium text-white">
                     Editar
                   </Link>
-                  <Button variant={p.is_active ? 'ghost' : 'primary'} onClick={() => toggleActive(p)}>
+                  <Button variant={p.is_active ? 'danger' : 'success'} onClick={() => toggleActive(p)}>
                     {p.is_active ? 'Desactivar' : 'Activar'}
                   </Button>
                 </div>
