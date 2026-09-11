@@ -29,7 +29,7 @@ Mantiene la arquitectura actual: **Google Drive guarda los archivos, Supabase gu
 Navegador → (redimensiona la imagen en cliente) → Edge Function `drive` → Google Apps Script → Drive
 ```
 
-- El frontend redimensiona cada imagen (canvas, máx 1600px, JPEG ~0.85) antes de subir, para respetar el límite de tamaño del cuerpo de la Edge Function/Apps Script y ahorrar espacio.
+- El frontend redimensiona cada imagen (canvas, lado mayor máx 1600px, JPEG ~0.85) antes de subir, para respetar el límite de tamaño del cuerpo de la Edge Function/Apps Script y ahorrar espacio.
 - La Edge Function `drive` valida JWT + rol (`gerente`/`master`) igual que hoy.
 - El Apps Script recibe base64, lo decodifica con `Utilities.base64Decode`, crea el archivo con `folder.createFile(blob)` y fija la visibilidad según `is_active`.
 
