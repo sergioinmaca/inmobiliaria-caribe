@@ -27,7 +27,7 @@ La plataforma tiene doble propósito:
 - **Enfoque:** Mobile-First (diseñar primero para 375px y escalar)
 - **Backend / BaaS:** Supabase (auth + DB): gestiona los inicios de sesión y las tablas del sistema administrativo; guarda metadatos y URLs de imágenes, no archivos.
 - **Almacenamiento de imágenes:** Google Drive como fuente de los archivos: carpeta raíz `catalogo_inmuebles/` con una subcarpeta por inmueble; Supabase guarda las URLs.
-- **Hosting:** Firebase Hosting
+- **Hosting:** Firebase Hosting (solo hosting; no se usa el SDK de Firebase — únicamente la CLI `firebase-tools` como devDependency)
 - **Estado global:** Zustand o Context API (elegir el más simple según necesidad)
 - **Formularios:** React Hook Form + Zod
 - **UI components:** shadcn/ui o componentes propios sobre Tailwind
@@ -134,10 +134,11 @@ public/
 3. Carga de fotos — dos vías soportadas:
    - **Manual (MVP):** el admin sube 5+ fotos a la subcarpeta de Drive.
    - **Por app (fase posterior):** el admin sube las fotos desde el formulario y el sistema las envía a Drive vía API.
-4. Un servicio (Google Drive API) obtiene los IDs de los archivos y genera las URLs directas.
-5. Las URLs se guardan en Supabase (tabla `properties.images[]`).
-6. El frontend consume las URLs desde Supabase, NO lista Drive directamente (para evitar rate limits).
-7. Placeholder: si un inmueble no tiene imágenes, usar `/public/brand/placeholder-property.webp`.
+4. **Detección de desincronización:** al abrir un inmueble en el admin, una Edge Function de Supabase (cuenta de servicio de Drive) lista la carpeta y el front compara contra `properties.images[]`.
+5. Si difieren → aviso: "Las imágenes de este inmueble están desincronizadas con Drive" + botón "Sincronizar imágenes" (visible solo para Gerente y Master).
+6. El sync genera las URLs directas y las guarda en Supabase (`properties.images[]`) — solo URLs, nunca archivos; Supabase Storage no se usa.
+7. El frontend consume las URLs desde Supabase, NO lista Drive directamente (para evitar rate limits).
+8. Placeholder: si un inmueble no tiene imágenes, usar `/public/brand/placeholder-property.webp`.
 
 ## 8. Entornos de Imágenes
 1. Entorno Front (Landing Page): imágenes de presentación de la página.
@@ -156,6 +157,7 @@ public/
 □ Login admin + CRUD de inmuebles
 □ Sync manual de Drive: leer carpetas y generar URLs (MVP)
 □ Subida de fotos desde el admin vía Drive API (post-MVP)
+□ Firebase Hosting: firebase-tools (devDependency) + init + deploy
 □ Estructura de Noticias (placeholder)
 
 ## 10. Lo que NO se debe Hacer
@@ -168,6 +170,9 @@ public/
 ## 11. Dominio y Despliegue
 Dominio elegido
 inmobiliaria-caribe.com ✅ (registrado vía K2WebHost)
+
+Repositorio
+https://github.com/sergioinmaca/inmobiliaria-caribe (rama `main`)
 
 Registrador
 K2WebHost — https://www.k2webhost.com/
@@ -238,3 +243,33 @@ Cuatro roles para el sistema administrativo, aplicados vía Supabase (tabla de u
 
 - **Master:** cuenta creada únicamente de forma manual en Supabase. Es el único rol con acceso al módulo de administración de usuarios en el front, desde donde crea Gerentes, Supervisores e Invitados.
 - **Interactuar:** responder consultas del público en el chat de preguntas por inmueble (fase posterior).
+
+## 13. Diseño de Entornos (MVP)
+
+### Header público (global)
+- Fondo blanco; logo `horizontal_color.svg` ocupando el 85% del ancho (izquierda)
+- 15% restante (derecha): separador `|` + enlace "Iniciar Sesión"
+- Tras login: menú de usuario (nombre, rol, "Panel administrativo", "Salir")
+
+### Landing `/`
+- Sección 1: banner de identidad (.png) — placeholder `/public/brand/banner-placeholder.png`
+- Sección 2: contenedor de 2 columnas × 1 fila con 2 iconos: "Catálogo de Inmuebles" (activo) y "Noticias y Reportes" (inactivo)
+
+### Catálogo `/catalogo`
+- Filtros: tipo, precio (rango, USD), zona
+- Lista de 1 columna; cards horizontales: imagen izquierda (~40% del ancho), info derecha (título, zona, tipo, precio)
+- Altura fija de card ≈ 25% del alto de pantalla (~170–200px en móvil)
+- 20 inmuebles por página, paginación numerada
+
+### Administración
+- Login `/login`: email + contraseña (Supabase Auth), sin registro público
+- Listado `/admin`: búsqueda + toggle Activar/Desactivar (activar exige campos completos y ≥5 imágenes)
+- Formulario `/admin/inmueble/:id?`: crea la carpeta de Drive al crear; sección Imágenes con aviso de desincronización + botón "Sincronizar imágenes" (Gerente/Master)
+- Usuarios `/admin/usuarios` (solo Master): crear Gerente/Supervisor/Invitado, desactivar cuentas
+
+### Flujo de ejecución acordado
+1. **Fase 1:** Scaffold Vite + React + TS + Router + Tailwind (consume `tokens.json`) + deps autorizadas
+2. **Fase 2:** Conexión Supabase — `.env` local, cliente en `src/lib/supabase.ts`, SQL de tablas/RLS en el SQL Editor del dashboard, primer Master, Login
+3. **Fase 3:** Firebase Hosting — `firebase-tools` (devDependency), `firebase init hosting` (público `dist/`), primer deploy, dominio
+
+Detalle completo: `docs/superpowers/specs/2026-09-10-inmobiliaria-caribe-mvp-design.md`
