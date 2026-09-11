@@ -3,9 +3,10 @@ import type { Profile } from '../../types'
 
 interface HeaderProps {
   profile?: Profile | null
+  onSignOut?: () => void
 }
 
-export function Header({ profile }: HeaderProps) {
+export function Header({ profile, onSignOut }: HeaderProps) {
   return (
     <header className="flex items-center border-b border-neutral-300 bg-white px-4 py-2">
       <div className="flex items-center" style={{ width: '85%' }}>
@@ -22,9 +23,18 @@ export function Header({ profile }: HeaderProps) {
         style={{ width: '15%' }}
       >
         {profile ? (
-          <Link to="/admin" className="text-small font-semibold text-primary">
-            {profile.full_name}
-          </Link>
+          <>
+            <Link to="/admin" className="text-small font-semibold text-primary">
+              {profile.full_name}
+            </Link>
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="text-small text-neutral-500 underline"
+            >
+              Salir
+            </button>
+          </>
         ) : (
           <Link to="/login" className="text-small font-semibold text-primary">
             Iniciar Sesión
