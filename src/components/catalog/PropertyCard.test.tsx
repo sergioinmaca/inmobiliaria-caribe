@@ -32,4 +32,20 @@ describe('PropertyCard', () => {
     expect(screen.getByText('La Florida · apartamento')).toBeInTheDocument()
     expect(screen.getByText('$120.000')).toBeInTheDocument()
   })
+
+  it('usa la primera foto por order como portada', () => {
+    const withImages = {
+      ...property,
+      images: [
+        { id: 'b', url: '/second.jpg', name: 'segunda', order: 1 },
+        { id: 'a', url: '/first.jpg', name: 'primera', order: 0 },
+      ],
+    }
+    render(
+      <MemoryRouter>
+        <PropertyCard property={withImages} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/first.jpg')
+  })
 })

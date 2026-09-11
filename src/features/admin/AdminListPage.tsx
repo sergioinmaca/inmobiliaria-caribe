@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { setDriveVisibility } from '../../lib/drive'
 import { MIN_IMAGES_TO_ACTIVATE } from '../../lib/constants'
+import { coverImage } from '../../lib/images'
 import { useSession } from '../../hooks/useSession'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -41,7 +42,9 @@ export function AdminListPage() {
   const toggleActive = async (property: Property) => {
     if (!property.is_active) {
       if (property.images.length < MIN_IMAGES_TO_ACTIVATE) {
-        setMessage(`No se puede activar: se necesitan al menos ${MIN_IMAGES_TO_ACTIVATE} imágenes.`)
+        setMessage(
+          `No se puede activar: se necesita al menos ${MIN_IMAGES_TO_ACTIVATE} imagen${MIN_IMAGES_TO_ACTIVATE === 1 ? '' : 'es'}.`,
+        )
         return
       }
       if (!property.title.trim() || !property.zone.trim()) {
@@ -107,7 +110,7 @@ export function AdminListPage() {
               className="flex items-center gap-3 rounded-md border border-neutral-300 bg-white p-3"
             >
               <img
-                src={p.images[0]?.url ?? '/brand/placeholder-property.svg'}
+                src={coverImage(p.images)?.url ?? '/brand/placeholder-property.svg'}
                 alt=""
                 className="h-14 w-14 rounded-sm object-cover"
               />

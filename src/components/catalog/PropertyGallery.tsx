@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { sortImages } from '../../lib/images'
 import type { PropertyImage } from '../../types'
 
 export function PropertyGallery({ images }: { images: PropertyImage[] }) {
   const [index, setIndex] = useState(0)
+  const sorted = sortImages(images)
 
-  if (images.length === 0) {
+  if (sorted.length === 0) {
     return (
       <img
         src="/brand/placeholder-property.svg"
@@ -14,15 +16,15 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
     )
   }
 
-  const current = images[index]
-  const prev = () => setIndex((i) => (i - 1 + images.length) % images.length)
-  const next = () => setIndex((i) => (i + 1) % images.length)
+  const current = sorted[index]
+  const prev = () => setIndex((i) => (i - 1 + sorted.length) % sorted.length)
+  const next = () => setIndex((i) => (i + 1) % sorted.length)
 
   return (
     <div className="relative">
       <img
         src={current.url}
-        alt={`${current.name} (${index + 1} de ${images.length})`}
+        alt={`${current.name} (${index + 1} de ${sorted.length})`}
         className="h-64 w-full rounded-md object-cover"
       />
       <button
