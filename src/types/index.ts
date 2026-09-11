@@ -29,6 +29,10 @@ export interface Property {
 export interface Profile {
   id: string
   full_name: string
+  first_name: string
+  last_name: string
+  phone: string | null
+  email: string
   role: Role
   is_active: boolean
   created_at: string

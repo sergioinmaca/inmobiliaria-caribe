@@ -17,6 +17,10 @@ describe('Header', () => {
     const profile = {
       id: '1',
       full_name: 'Ana Pérez',
+      first_name: 'Ana',
+      last_name: 'Pérez',
+      phone: null,
+      email: 'ana@inmaca.com',
       role: 'gerente' as const,
       is_active: true,
       created_at: '',

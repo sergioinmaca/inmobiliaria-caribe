@@ -32,14 +32,24 @@ const inactiveProperty = {
 describe('AdminListPage', () => {
   beforeEach(() => {
     mockedUseSession.mockReturnValue({
-      profile: { id: '1', full_name: 'Ana', role: 'gerente', is_active: true, created_at: '' },
+      profile: {
+        id: '1',
+        full_name: 'Ana',
+        first_name: 'Ana',
+        last_name: '',
+        phone: null,
+        email: 'ana@inmaca.com',
+        role: 'gerente',
+        is_active: true,
+        created_at: '',
+      },
       loading: false,
       signOut: vi.fn(),
     })
     mockedFrom.mockReset()
   })
 
-  it('bloquea activar sin 5 imágenes y muestra el error', async () => {
+  it('bloquea activar sin imágenes y muestra el error', async () => {
     const user = userEvent.setup()
     mockedFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -56,6 +66,6 @@ describe('AdminListPage', () => {
     await screen.findByText('Apto La Florida')
     await user.click(screen.getByRole('button', { name: 'Activar' }))
 
-    expect(await screen.findByText(/se necesitan al menos 5 imágenes/)).toBeInTheDocument()
+    expect(await screen.findByText(/se necesita al menos 1 imagen/)).toBeInTheDocument()
   })
 })

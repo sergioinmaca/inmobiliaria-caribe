@@ -42,7 +42,17 @@ function renderSection(overrides: Partial<Parameters<typeof PropertyImagesSectio
 describe('PropertyImagesSection', () => {
   beforeEach(() => {
     mockedUseSession.mockReturnValue({
-      profile: { id: '1', full_name: 'Ana', role: 'gerente', is_active: true, created_at: '' },
+      profile: {
+        id: '1',
+        full_name: 'Ana',
+        first_name: 'Ana',
+        last_name: '',
+        phone: null,
+        email: 'ana@inmaca.com',
+        role: 'gerente',
+        is_active: true,
+        created_at: '',
+      },
       loading: false,
       signOut: vi.fn(),
     })
