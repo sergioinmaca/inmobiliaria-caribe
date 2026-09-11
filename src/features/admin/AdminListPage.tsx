@@ -136,11 +136,11 @@ export function AdminListPage() {
                 <div className="-mx-4 flex items-center justify-end gap-2 bg-accent px-4 py-2">
                   <Link
                     to={`/admin/inmueble/${p.id}`}
-                    className="inline-flex items-center justify-center rounded-sm bg-white px-4 py-2 text-body font-medium text-primary"
+                    className="inline-flex items-center justify-center rounded-sm bg-white px-3 py-1 text-body font-medium text-primary"
                   >
                     Editar
                   </Link>
-                  <Button variant={p.is_active ? 'danger' : 'success'} onClick={() => toggleActive(p)}>
+                  <Button variant={p.is_active ? 'danger' : 'success'} size="sm" onClick={() => toggleActive(p)}>
                     {p.is_active ? 'Desactivar' : 'Activar'}
                   </Button>
                 </div>
