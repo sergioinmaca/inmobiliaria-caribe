@@ -108,21 +108,22 @@ export function AdminListPage() {
           {filtered.map((p) => (
             <li key={p.id} className="border-b border-neutral-300 bg-white px-4 py-2">
               <div className="flex h-44">
-                <Link to={`/admin/inmueble/${p.id}`} className="block h-full w-2/5 shrink-0">
+                <Link to={`/admin/inmueble/${p.id}`} className="relative block h-full w-2/5 shrink-0">
                   <img
                     src={coverImage(p.images)?.url ?? '/brand/placeholder-property.svg'}
                     alt={p.title}
                     className="h-full w-full object-cover"
                   />
+                  <Badge
+                    variant={p.is_active ? 'success' : 'default'}
+                    className="absolute left-2 top-2"
+                  >
+                    {p.is_active ? 'Activo' : 'Inactivo'}
+                  </Badge>
                 </Link>
                 <div className="flex flex-1 flex-col justify-between p-3">
                   <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-h3 font-semibold text-neutral-900">{p.title}</h3>
-                      <Badge variant={p.is_active ? 'success' : 'default'}>
-                        {p.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
-                    </div>
+                    <h3 className="text-h3 font-semibold text-neutral-900">{p.title}</h3>
                     <p className="text-small text-neutral-500">
                       {p.zone} · {p.type}
                     </p>
