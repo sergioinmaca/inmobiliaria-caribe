@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PropertyImagesSection } from './PropertyImagesSection'
 import { useSession } from '../../hooks/useSession'
 import { listDriveFiles, uploadDriveFile, deleteDriveFile } from '../../lib/drive'
-import { resizeImage } from '../../lib/imageResize'
+import { resizeImage, type ResizedImage } from '../../lib/imageResize'
 import type { PropertyImage } from '../../types'
 
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }))
@@ -105,5 +105,49 @@ describe('PropertyImagesSection', () => {
   it('marca la primera foto como portada', () => {
     renderSection({ images: [img('a', 0), img('b', 1)] })
     expect(screen.getAllByText('Portada')).toHaveLength(1)
+  })
+
+  it('muestra el resumen al subir varias fotos', async () => {
+    const user = userEvent.setup()
+    const props = renderSection({ images: [] })
+    mockedResizeImage
+      .mockResolvedValueOnce({ base64: 'a', mimeType: 'image/jpeg', name: 'a.jpg' })
+      .mockResolvedValueOnce({ base64: 'b', mimeType: 'image/jpeg', name: 'b.jpg' })
+    mockedUploadDriveFile
+      .mockResolvedValueOnce({ id: 'f1', name: 'a.jpg', url: 'u/f1' })
+      .mockResolvedValueOnce({ id: 'f2', name: 'b.jpg', url: 'u/f2' })
+
+    const files = [
+      new File(['1'], 'a.png', { type: 'image/png' }),
+      new File(['2'], 'b.png', { type: 'image/png' }),
+    ]
+    await user.upload(screen.getByLabelText('Agregar fotos'), files)
+
+    expect(await screen.findByText('Se subieron 2 fotos.')).toBeInTheDocument()
+    expect(props.onChange).toHaveBeenCalledTimes(2)
+  })
+
+  it('muestra el progreso del lote al subir', async () => {
+    const user = userEvent.setup()
+    renderSection({ images: [] })
+    let resolveFirst!: (v: ResizedImage) => void
+    const first = new Promise<ResizedImage>((resolve) => {
+      resolveFirst = resolve
+    })
+    mockedResizeImage.mockReturnValueOnce(first)
+    mockedResizeImage.mockResolvedValueOnce({ base64: 'b', mimeType: 'image/jpeg', name: 'b.jpg' })
+    mockedUploadDriveFile.mockResolvedValue({ id: 'f1', name: 'a.jpg', url: 'u/f1' })
+
+    const files = [
+      new File(['1'], 'a.png', { type: 'image/png' }),
+      new File(['2'], 'b.png', { type: 'image/png' }),
+    ]
+    await user.upload(screen.getByLabelText('Agregar fotos'), files)
+
+    expect(await screen.findByText(/Subiendo 1 de 2/)).toBeInTheDocument()
+
+    resolveFirst({ base64: 'a', mimeType: 'image/jpeg', name: 'a.jpg' })
+
+    expect(await screen.findByText('Se subieron 2 fotos.')).toBeInTheDocument()
   })
 })

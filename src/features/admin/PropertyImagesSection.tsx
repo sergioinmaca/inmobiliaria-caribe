@@ -30,7 +30,8 @@ export function PropertyImagesSection({
   const { profile } = useSession()
   const [desynced, setDesynced] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [uploading, setUploading] = useState<string | null>(null)
+  const [progress, setProgress] = useState<{ current: number; total: number; name: string } | null>(null)
+  const [summary, setSummary] = useState<{ text: string; ok: boolean } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const imagesRef = useRef(images)
 
@@ -66,9 +67,15 @@ export function PropertyImagesSection({
         return
       }
     }
-    for (const file of Array.from(files)) {
-      setUploading(file.name)
-      setMessage(null)
+    const fileList = Array.from(files)
+    let successCount = 0
+    let failedCount = 0
+    setMessage(null)
+    setSummary(null)
+    setProgress({ current: 0, total: fileList.length, name: '' })
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i]
+      setProgress({ current: i + 1, total: fileList.length, name: file.name })
       try {
         const resized = await resizeImage(file)
         const uploaded = await uploadDriveFile({
@@ -84,11 +91,20 @@ export function PropertyImagesSection({
           { id: uploaded.id, url: uploaded.url, name: uploaded.name, order: imagesRef.current.length },
         ]
         onChange(next)
+        successCount++
       } catch {
-        setMessage(`No se pudo subir ${file.name}.`)
-      } finally {
-        setUploading(null)
+        failedCount++
       }
+    }
+    setProgress(null)
+    if (successCount > 0 || failedCount > 0) {
+      const ok = failedCount === 0
+      const subidas = `Se subieron ${successCount} foto${successCount === 1 ? '' : 's'}`
+      const fallos =
+        failedCount > 0
+          ? ` · ${failedCount} no ${failedCount === 1 ? 'se pudo' : 'se pudieron'} subir`
+          : ''
+      setSummary({ text: `${subidas}${fallos}.`, ok })
     }
   }
 
@@ -154,7 +170,15 @@ export function PropertyImagesSection({
         </div>
       )}
 
-      {uploading && <p className="text-small text-neutral-500">Subiendo {uploading}…</p>}
+      {progress && (
+        <p className="text-small text-neutral-500">
+          Subiendo {progress.current} de {progress.total}
+          {progress.name ? ` — ${progress.name}` : ''}…
+        </p>
+      )}
+      {summary && (
+        <p className={`text-small ${summary.ok ? 'text-success' : 'text-danger'}`}>{summary.text}</p>
+      )}
 
       {desynced && canManage && (
         <p className="text-small text-warning">
