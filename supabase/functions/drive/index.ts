@@ -5,6 +5,7 @@
 //         | { action: 'sync', propertyId, folderId? } | { action: 'setVisibility', propertyId, folderId? }
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { mergeImages, type ImageRecord, type IncomingFile } from './mergeImages.ts'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -60,11 +61,38 @@ Deno.serve(async (req) => {
     action: string
     name?: string
     folderId?: string
+    fileId?: string
     propertyId?: string
+    mimeType?: string
+    data?: string
+    isActive?: boolean
   }
 
   if (body.action === 'createFolder') {
     const result = await callScript({ action: 'createFolder', name: body.name ?? '' })
+    if ('error' in result) return json(result, 400)
+    return json(result)
+  }
+
+  if (body.action === 'upload') {
+    const { folderId, name, mimeType, data, isActive } = body
+    if (!folderId || !data) return json({ error: 'faltan datos' }, 400)
+    const result = await callScript({
+      action: 'upload',
+      folderId,
+      name,
+      mimeType,
+      data,
+      isActive: Boolean(isActive),
+    })
+    if ('error' in result) return json(result, 400)
+    return json(result)
+  }
+
+  if (body.action === 'delete') {
+    const { folderId, fileId } = body
+    if (!folderId || !fileId) return json({ error: 'faltan datos' }, 400)
+    const result = await callScript({ action: 'delete', folderId, fileId })
     if ('error' in result) return json(result, 400)
     return json(result)
   }
@@ -80,10 +108,14 @@ Deno.serve(async (req) => {
 
     const { data: prop } = await supabase
       .from('properties')
-      .select('is_active, drive_folder_id')
+      .select('is_active, drive_folder_id, images')
       .eq('id', body.propertyId)
       .single()
-    const property = prop as { is_active: boolean; drive_folder_id: string | null } | null
+    const property = prop as {
+      is_active: boolean
+      drive_folder_id: string | null
+      images: ImageRecord[]
+    } | null
     const folderId = body.folderId ?? property?.drive_folder_id ?? ''
     const isActive = property?.is_active ?? false
 
@@ -93,10 +125,10 @@ Deno.serve(async (req) => {
     if ('error' in result) return json(result, 400)
 
     if (body.action === 'sync' && 'files' in result) {
-      await supabase
-        .from('properties')
-        .update({ images: (result as { files: unknown[] }).files })
-        .eq('id', body.propertyId)
+      const existing = property?.images ?? []
+      const incoming = (result as { files: IncomingFile[] }).files
+      const merged = mergeImages(existing, incoming)
+      await supabase.from('properties').update({ images: merged }).eq('id', body.propertyId)
     }
     return json(result)
   }
