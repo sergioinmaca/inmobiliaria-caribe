@@ -13,9 +13,12 @@ export function CatalogPage() {
       <Filters value={filters} onChange={setFilters} />
 
       {loading ? (
-        <div className="flex flex-col gap-3" data-testid="catalog-skeleton">
+        <div
+          className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col border-t border-neutral-300"
+          data-testid="catalog-skeleton"
+        >
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-44 animate-pulse rounded-md bg-surface" />
+            <div key={i} className="h-44 animate-pulse border-b border-neutral-300 bg-surface" />
           ))}
         </div>
       ) : error ? (
@@ -41,7 +44,7 @@ export function CatalogPage() {
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col border-t border-neutral-300">
           {properties.map((p) => (
             <PropertyCard key={p.id} property={p} />
           ))}
