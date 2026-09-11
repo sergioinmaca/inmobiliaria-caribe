@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+.vite/
+coverage/
+
+# Environment variables (Supabase, Firebase, Google Drive keys)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Google service account credentials
+*.service-account.json
+credentials/
+firebase-adminsdk*.json
+
+# OS
+.DS_Store
+Thumbs.db
