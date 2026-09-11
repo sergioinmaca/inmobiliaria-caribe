@@ -40,6 +40,12 @@ function doPost(e) {
         case 'setVisibility':
           result = setVisibility(body.folderId, Boolean(body.isActive));
           break;
+        case 'upload':
+          result = uploadFile(body.folderId, body.name, body.mimeType, body.data, Boolean(body.isActive));
+          break;
+        case 'delete':
+          result = deleteFile(body.folderId, body.fileId);
+          break;
         default:
           result = { error: 'accion desconocida' };
       }
@@ -109,4 +115,31 @@ function syncFolder(folderId, isActive) {
 function setVisibility(folderId, isActive) {
   applyVisibility(folderId, isActive);
   return { ok: true };
+}
+
+function uploadFile(folderId, name, mimeType, data, isActive) {
+  const bytes = Utilities.base64Decode(String(data || ''));
+  const blob = Utilities.newBlob(bytes, mimeType || 'image/jpeg', name);
+  const folder = DriveApp.getFolderById(folderId);
+  const file = folder.createFile(blob);
+  const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
+  file.setSharing(access, DriveApp.Permission.VIEW);
+  return {
+    id: file.getId(),
+    name: file.getName(),
+    url: 'https://lh3.googleusercontent.com/d/' + file.getId(),
+  };
+}
+
+function deleteFile(folderId, fileId) {
+  const folder = DriveApp.getFolderById(folderId);
+  const it = folder.getFiles();
+  while (it.hasNext()) {
+    const f = it.next();
+    if (f.getId() === fileId) {
+      f.setTrashed(true);
+      return { ok: true };
+    }
+  }
+  return { error: 'archivo no encontrado en la carpeta' };
 }
