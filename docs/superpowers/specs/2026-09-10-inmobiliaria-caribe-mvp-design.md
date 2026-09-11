@@ -56,12 +56,24 @@ Plataforma web de la Inmobiliaria Municipal Caribe (Caracas, Venezuela) con tres
 | title | text | |
 | type | text | `apartamento` \| `casa` \| `local` |
 | zone | text | zona de Caracas |
-| price_usd | numeric(12,2) | moneda USD (ver §11) |
+| price_usd | numeric(12,2) | valor normalizado en USD para filtros/orden (null = sin precio exacto) |
+| price_original | numeric(12,2) | monto original (si está en Bs) |
+| price_currency | text | `usd` \| `bs` |
+| price_is_ref | boolean | muestra "REF." (por defecto `true`) |
 | description | text | |
 | is_active | boolean | publicación visible en el catálogo público |
 | drive_folder_id | text | id de la subcarpeta en Drive |
 | images | jsonb | lista `[{id, url, name, order}]` — solo URLs |
 | created_at / updated_at | timestamptz | |
+
+**Tabla `settings`** (clave/valor, p. ej. tasa de cambio):
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| key | text PK | ej. `usd_to_bs_rate` |
+| value | text | ej. `"50"` |
+
+**Modelo de precio:** tres modos. `price_is_ref = true` → muestra "REF.". En `usd` → `price_usd` = monto. En `bs` → `price_usd = price_original / tasa` (la tasa vive en `settings.usd_to_bs_rate`, editable por Master).
 
 **Políticas RLS:**
 
@@ -197,7 +209,6 @@ La detección se hace bajo demanda (al abrir el inmueble), no por listado global
 ## 11. Entradas pendientes del cliente
 
 - Banner PNG real de la landing (usar placeholder mientras)
-- Lista de zonas de Caracas (constante inicial en código)
-- Confirmar moneda USD para precios
+- Lista de zonas de Caracas (constante provisional en código, reemplazable)
 - Sección "Imágenes" del brand-guide (estilo fotográfico)
 - Cuentas/configuración externa: proyecto Supabase (tablas, RLS, Edge Function), cuenta de servicio de Drive, carpeta `catalogo_inmuebles/`
