@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('App', () => {
-  it('renders the brand title', () => {
+  it('renderiza el header y la landing', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/']}>
         <App />
       </MemoryRouter>,
     )
-    expect(screen.getByText('Inmobiliaria Municipal Caribe')).toBeInTheDocument()
+    expect(screen.getByText('Iniciar Sesión')).toBeInTheDocument()
+    expect(screen.getByText('Catálogo de Inmuebles')).toBeInTheDocument()
+    expect(screen.getByText('Noticias y Reportes')).toBeInTheDocument()
   })
 })

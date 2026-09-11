@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" role="img" aria-label="Banner placeholder">
+  <rect width="1200" height="400" fill="#040F60" />
+  <rect x="24" y="24" width="1152" height="352" fill="none" stroke="#CDD6DF" stroke-width="2" />
+  <text x="600" y="210" text-anchor="middle" font-family="Raleway, sans-serif" font-size="40" font-weight="700" fill="#CDD6DF">Banner — Inmobiliaria Municipal Caribe</text>
+</svg>
