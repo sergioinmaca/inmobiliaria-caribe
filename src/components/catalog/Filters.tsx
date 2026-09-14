@@ -1,4 +1,4 @@
-import { PROPERTY_TYPES, ZONES } from '../../lib/constants'
+import { PROPERTY_TYPES, PARROQUIAS } from '../../lib/constants'
 import type { PropertyFilters } from '../../hooks/useProperties'
 
 interface FiltersProps {
@@ -18,8 +18,8 @@ export function Filters({ value, onChange }: FiltersProps) {
           </label>
           <select
             id="filter-type"
-            value={value.type}
-            onChange={(e) => set({ type: e.target.value as PropertyFilters['type'] })}
+            value={value.tipo}
+            onChange={(e) => set({ tipo: e.target.value as PropertyFilters['tipo'] })}
             className="rounded-sm border border-neutral-300 px-2 py-2 text-body"
           >
             <option value="all">Todos</option>
@@ -31,17 +31,17 @@ export function Filters({ value, onChange }: FiltersProps) {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="filter-zone" className="text-small font-medium text-neutral-900">
-            Zona
+          <label htmlFor="filter-parroquia" className="text-small font-medium text-neutral-900">
+            Parroquia
           </label>
           <select
-            id="filter-zone"
-            value={value.zone}
-            onChange={(e) => set({ zone: e.target.value })}
+            id="filter-parroquia"
+            value={value.parroquia}
+            onChange={(e) => set({ parroquia: e.target.value })}
             className="rounded-sm border border-neutral-300 px-2 py-2 text-body"
           >
             <option value="">Todas</option>
-            {ZONES.map((z) => (
+            {PARROQUIAS.map((z) => (
               <option key={z} value={z}>
                 {z}
               </option>

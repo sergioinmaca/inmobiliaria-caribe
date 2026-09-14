@@ -20,7 +20,7 @@ export function PropertyDetailPage() {
     let active = true
     setLoading(true)
     supabase
-      .from('properties')
+      .from('propiedades')
       .select('*')
       .eq('id', id)
       .single()
@@ -47,9 +47,9 @@ export function PropertyDetailPage() {
     <div className="flex flex-col gap-6">
       <PropertyGallery images={property.images} />
       <div className="flex flex-col gap-2">
-        <h1 className="text-h1 font-bold text-primary">{property.title}</h1>
+        <h1 className="text-h1 font-bold text-primary">{property.titulo}</h1>
         <p className="text-body text-neutral-500">
-          {property.zone} · {property.type}
+          {property.parroquia} · {property.tipo}
         </p>
         <p className="text-h2 font-semibold text-primary">{formatPrice(property)}</p>
       </div>

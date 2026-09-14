@@ -14,9 +14,9 @@ const mockedFrom = vi.mocked(supabase.from)
 
 const inactiveProperty = {
   id: '1',
-  title: 'Apto La Florida',
-  type: 'apartamento',
-  zone: 'La Florida',
+  titulo: 'Apto La Florida',
+  tipo: 'apartamento',
+  parroquia: 'La Florida',
   price_usd: null,
   price_original: null,
   price_currency: null,

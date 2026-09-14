@@ -7,15 +7,15 @@ import { Input } from '../../components/ui/Input'
 import { supabase } from '../../lib/supabase'
 import { createDriveFolder } from '../../lib/drive'
 import { normalizePriceUsd } from '../../lib/price'
-import { PROPERTY_TYPES, ZONES } from '../../lib/constants'
+import { PROPERTY_TYPES, PARROQUIAS } from '../../lib/constants'
 import { PropertyImagesSection } from './PropertyImagesSection'
 import { propertySchema, type PropertyFormValues } from '../../lib/propertySchema'
 import type { Property, PropertyImage } from '../../types'
 
 const defaultValues: PropertyFormValues = {
-  title: '',
-  type: 'apartamento',
-  zone: '',
+  titulo: '',
+  tipo: 'apartamento',
+  parroquia: '',
   priceMode: 'ref',
   priceAmount: null,
   description: '',
@@ -41,7 +41,7 @@ export function PropertyFormPage() {
 
   const reloadProperty = useCallback(async () => {
     if (!id) return
-    const { data } = await supabase.from('properties').select('*').eq('id', id).single()
+    const { data } = await supabase.from('propiedades').select('*').eq('id', id).single()
     if (data) {
       const p = data as Property
       setProperty(p)
@@ -52,7 +52,7 @@ export function PropertyFormPage() {
 
   const ensureFolder = useCallback(async () => {
     if (driveFolderId) return driveFolderId
-    const name = `${getValues('type')}-${getValues('zone')}`
+    const name = `${getValues('tipo')}-${getValues('parroquia')}`
     const folderId = await createDriveFolder(name)
     if (folderId) setDriveFolderId(folderId)
     return folderId
@@ -62,7 +62,7 @@ export function PropertyFormPage() {
     async (next: PropertyImage[]) => {
       setImages(next)
       if (isEdit && id) {
-        await supabase.from('properties').update({ images: next }).eq('id', id)
+        await supabase.from('propiedades').update({ images: next }).eq('id', id)
       }
     },
     [isEdit, id],
@@ -83,7 +83,7 @@ export function PropertyFormPage() {
     if (!id) return
     let active = true
     supabase
-      .from('properties')
+      .from('propiedades')
       .select('*')
       .eq('id', id)
       .single()
@@ -95,9 +95,9 @@ export function PropertyFormPage() {
           setImages(p.images)
           setDriveFolderId(p.drive_folder_id)
           reset({
-            title: p.title,
-            type: p.type,
-            zone: p.zone,
+            titulo: p.titulo,
+            tipo: p.tipo,
+            parroquia: p.parroquia,
             priceMode: p.price_is_ref ? 'ref' : (p.price_currency ?? 'usd'),
             priceAmount: p.price_original,
             description: p.description,
@@ -115,9 +115,9 @@ export function PropertyFormPage() {
     const isRef = currency === null
     const amount = isRef ? null : values.priceAmount
     const payload = {
-      title: values.title,
-      type: values.type,
-      zone: values.zone,
+      titulo: values.titulo,
+      tipo: values.tipo,
+      parroquia: values.parroquia,
       description: values.description ?? '',
       price_is_ref: isRef,
       price_currency: currency,
@@ -126,7 +126,7 @@ export function PropertyFormPage() {
     }
 
     if (isEdit && id) {
-      const { error } = await supabase.from('properties').update(payload).eq('id', id)
+      const { error } = await supabase.from('propiedades').update(payload).eq('id', id)
       if (error) {
         setSubmitError('Error al guardar los cambios.')
         return
@@ -137,11 +137,11 @@ export function PropertyFormPage() {
 
     let folderId = driveFolderId
     if (!folderId) {
-      folderId = await createDriveFolder(`${values.type}-${values.zone}`)
+      folderId = await createDriveFolder(`${values.tipo}-${values.parroquia}`)
     }
 
     const { error } = await supabase
-      .from('properties')
+      .from('propiedades')
       .insert({ ...payload, drive_folder_id: folderId, images })
     if (error) {
       setSubmitError('Error al crear el inmueble.')
@@ -155,16 +155,16 @@ export function PropertyFormPage() {
       <h1 className="text-h2 font-bold text-primary">{isEdit ? 'Editar inmueble' : 'Nuevo inmueble'}</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-        <Input id="title" label="Título" {...register('title')} />
-        {errors.title && <p className="text-small text-danger">{errors.title.message}</p>}
+        <Input id="titulo" label="Título" {...register('titulo')} />
+        {errors.titulo && <p className="text-small text-danger">{errors.titulo.message}</p>}
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="type" className="text-small font-medium text-neutral-900">
+          <label htmlFor="tipo" className="text-small font-medium text-neutral-900">
             Tipo
           </label>
           <select
-            id="type"
-            {...register('type')}
+            id="tipo"
+            {...register('tipo')}
             className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
           >
             {PROPERTY_TYPES.map((t) => (
@@ -176,23 +176,23 @@ export function PropertyFormPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="zone" className="text-small font-medium text-neutral-900">
-            Zona
+          <label htmlFor="parroquia" className="text-small font-medium text-neutral-900">
+            Parroquia
           </label>
           <select
-            id="zone"
-            {...register('zone')}
+            id="parroquia"
+            {...register('parroquia')}
             className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
           >
-            <option value="">Selecciona una zona</option>
-            {ZONES.map((z) => (
+            <option value="">Selecciona una parroquia</option>
+            {PARROQUIAS.map((z) => (
               <option key={z} value={z}>
                 {z}
               </option>
             ))}
           </select>
         </div>
-        {errors.zone && <p className="text-small text-danger">{errors.zone.message}</p>}
+        {errors.parroquia && <p className="text-small text-danger">{errors.parroquia.message}</p>}
 
         <div className="flex flex-col gap-1">
           <label htmlFor="priceMode" className="text-small font-medium text-neutral-900">

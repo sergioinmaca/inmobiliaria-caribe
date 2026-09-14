@@ -10,12 +10,12 @@ export function PropertyCard({ property }: { property: Property }) {
       to={`/inmueble/${property.id}`}
       className="flex h-44 border-b border-neutral-300 bg-white px-4 py-2"
     >
-      <img src={cover} alt={property.title} className="h-full w-2/5 object-cover" />
+      <img src={cover} alt={property.titulo} className="h-full w-2/5 object-cover" />
       <div className="flex flex-1 flex-col justify-between p-3">
         <div>
-          <h3 className="text-h3 font-semibold text-neutral-900">{property.title}</h3>
+          <h3 className="text-h3 font-semibold text-neutral-900">{property.titulo}</h3>
           <p className="text-small text-neutral-500">
-            {property.zone} · {property.type}
+            {property.parroquia} · {property.tipo}
           </p>
         </div>
         <span className="text-body font-bold text-primary">{formatPrice(property)}</span>

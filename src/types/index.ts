@@ -11,9 +11,9 @@ export interface PropertyImage {
 
 export interface Property {
   id: string
-  title: string
-  type: PropertyType
-  zone: string
+  titulo: string
+  tipo: PropertyType
+  parroquia: string
   price_usd: number | null
   price_original: number | null
   price_currency: PriceCurrency | null

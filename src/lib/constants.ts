@@ -2,7 +2,7 @@ import type { PropertyType } from '../types'
 
 export const PROPERTY_TYPES: PropertyType[] = ['apartamento', 'casa', 'local']
 
-export const ZONES = [
+export const PARROQUIAS = [
   'La Florida',
   'Las Mercedes',
   'Chacao',

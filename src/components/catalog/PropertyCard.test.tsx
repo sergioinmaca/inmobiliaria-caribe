@@ -6,9 +6,9 @@ import type { Property } from '../../types'
 
 const property: Property = {
   id: '1',
-  title: 'Apartamento en La Florida',
-  type: 'apartamento',
-  zone: 'La Florida',
+  titulo: 'Apartamento en La Florida',
+  tipo: 'apartamento',
+  parroquia: 'La Florida',
   price_usd: 120000,
   price_original: 120000,
   price_currency: 'usd',

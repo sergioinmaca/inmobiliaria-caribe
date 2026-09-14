@@ -23,7 +23,7 @@ export function AdminListPage() {
   const load = useCallback(async () => {
     setLoading(true)
     const { data, error } = await supabase
-      .from('properties')
+      .from('propiedades')
       .select('*')
       .order('created_at', { ascending: false })
     if (!error) setProperties((data as Property[]) ?? [])
@@ -36,8 +36,8 @@ export function AdminListPage() {
 
   const filtered = properties.filter(
     (p) =>
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.zone.toLowerCase().includes(search.toLowerCase()),
+      p.titulo.toLowerCase().includes(search.toLowerCase()) ||
+      p.parroquia.toLowerCase().includes(search.toLowerCase()),
   )
 
   const toggleActive = async (property: Property) => {
@@ -48,7 +48,7 @@ export function AdminListPage() {
         )
         return
       }
-      if (!property.title.trim() || !property.zone.trim()) {
+      if (!property.titulo.trim() || !property.parroquia.trim()) {
         setMessage('No se puede activar: faltan campos obligatorios.')
         return
       }
@@ -57,7 +57,7 @@ export function AdminListPage() {
     }
 
     const { error } = await supabase
-      .from('properties')
+      .from('propiedades')
       .update({ is_active: !property.is_active })
       .eq('id', property.id)
     if (error) {
@@ -87,7 +87,7 @@ export function AdminListPage() {
 
       <input
         type="search"
-        placeholder="Buscar por título o zona"
+        placeholder="Buscar por título o parroquia"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
@@ -111,7 +111,7 @@ export function AdminListPage() {
                 <Link to={`/admin/inmueble/${p.id}`} className="relative block h-full w-2/5 shrink-0">
                   <img
                     src={coverImage(p.images)?.url ?? '/brand/placeholder-property.svg'}
-                    alt={p.title}
+                    alt={p.titulo}
                     className="h-full w-full object-cover"
                   />
                   <Badge
@@ -123,9 +123,9 @@ export function AdminListPage() {
                 </Link>
                 <div className="flex flex-1 flex-col justify-between p-3">
                   <div>
-                    <h3 className="text-h3 font-semibold text-neutral-900">{p.title}</h3>
+                    <h3 className="text-h3 font-semibold text-neutral-900">{p.titulo}</h3>
                     <p className="text-small text-neutral-500">
-                      {p.zone} · {p.type}
+                      {p.parroquia} · {p.tipo}
                     </p>
                   </div>
                   <span className="text-body font-bold text-primary">{formatPrice(p)}</span>

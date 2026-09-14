@@ -4,15 +4,15 @@ import { ITEMS_PER_PAGE } from '../lib/constants'
 import type { Property, PropertyType } from '../types'
 
 export interface PropertyFilters {
-  type: PropertyType | 'all'
-  zone: string
+  tipo: PropertyType | 'all'
+  parroquia: string
   minPrice: number | null
   maxPrice: number | null
 }
 
 export const DEFAULT_FILTERS: PropertyFilters = {
-  type: 'all',
-  zone: '',
+  tipo: 'all',
+  parroquia: '',
   minPrice: null,
   maxPrice: null,
 }
@@ -32,14 +32,14 @@ export function useProperties() {
     const to = from + ITEMS_PER_PAGE - 1
 
     let query = supabase
-      .from('properties')
+      .from('propiedades')
       .select('*', { count: 'exact' })
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    if (filters.type !== 'all') query = query.eq('type', filters.type)
-    if (filters.zone) query = query.eq('zone', filters.zone)
+    if (filters.tipo !== 'all') query = query.eq('tipo', filters.tipo)
+    if (filters.parroquia) query = query.eq('parroquia', filters.parroquia)
     if (filters.minPrice != null) query = query.gte('price_usd', filters.minPrice)
     if (filters.maxPrice != null) query = query.lte('price_usd', filters.maxPrice)
 

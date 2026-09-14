@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     if (!body.propertyId) return json({ error: 'falta propertyId' }, 400)
 
     const { data: prop } = await supabase
-      .from('properties')
+      .from('propiedades')
       .select('is_active, drive_folder_id, images')
       .eq('id', body.propertyId)
       .single()
@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
       const existing = property?.images ?? []
       const incoming = (result as { files: IncomingFile[] }).files
       const merged = mergeImages(existing, incoming)
-      await supabase.from('properties').update({ images: merged }).eq('id', body.propertyId)
+      await supabase.from('propiedades').update({ images: merged }).eq('id', body.propertyId)
     }
     return json(result)
   }
