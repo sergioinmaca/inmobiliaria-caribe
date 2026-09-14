@@ -1,0 +1,14 @@
+{
+  // deno.enable: false + enablePaths activa Deno SOLO en supabase/functions
+  // sin romper el proyecto Vite/React que usa el TypeScript server normal
+  "deno.enable": false,
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.unstable": false,
+  "deno.lint": true,
+  "deno.config": "./supabase/functions/deno.json",
+  "deno.suggest.imports.hosts": {
+    "https://deno.land": true
+  },
+  // Ensures tsserver does NOT try to handle Deno files
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false
+}

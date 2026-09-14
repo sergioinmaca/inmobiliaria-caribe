@@ -1,10 +1,11 @@
+/// <reference lib="deno.ns" />
 // Supabase Edge Function: integración con Google Drive vía Google Apps Script.
 // Despliegue (dashboard): Edge Functions → New Function "drive" → pegar este código.
 // Secrets requeridos: SUPABASE_URL, SUPABASE_ANON_KEY (automáticos), APPS_SCRIPT_URL, APPS_SCRIPT_SECRET.
 // Acciones: { action: 'createFolder', name } | { action: 'list', folderId }
 //         | { action: 'sync', propertyId, folderId? } | { action: 'setVisibility', propertyId, folderId? }
 
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from '@supabase/supabase-js'
 
 interface ImageRecord {
   id: string
@@ -58,7 +59,7 @@ async function callScript(payload: Record<string, unknown>) {
   return data
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
 
   const authHeader = req.headers.get('Authorization') ?? ''
