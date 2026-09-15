@@ -5,10 +5,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { supabase } from '../../lib/supabase'
-import { createDriveFolder } from '../../lib/drive'
+import { createDriveFolder, deleteDriveFolder } from '../../lib/drive'
 import { normalizePriceUsd } from '../../lib/price'
 import { PROPERTY_TYPES, PARROQUIAS } from '../../lib/constants'
 import { PropertyImagesSection } from './PropertyImagesSection'
+import { useSession } from '../../hooks/useSession'
 import { propertySchema, type PropertyFormValues } from '../../lib/propertySchema'
 import type { Property, PropertyImage } from '../../types'
 
@@ -25,11 +26,16 @@ export function PropertyFormPage() {
   const { id } = useParams<{ id: string }>()
   const isEdit = Boolean(id)
   const navigate = useNavigate()
+  const { profile } = useSession()
   const [rate, setRate] = useState(0)
   const [property, setProperty] = useState<Property | null>(null)
   const [images, setImages] = useState<PropertyImage[]>([])
   const [driveFolderId, setDriveFolderId] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const canDelete = profile?.role === 'master' || profile?.role === 'gerente'
 
   const {
     register,
@@ -155,6 +161,34 @@ export function PropertyFormPage() {
     navigate('/admin')
   }
 
+  const onDelete = async () => {
+    if (!id) return
+    if (
+      !window.confirm(
+        '¿Eliminar definitivamente este inmueble y sus fotos? Esta acción no se puede deshacer.',
+      )
+    ) {
+      return
+    }
+    setDeleteError(null)
+    setDeleting(true)
+    if (driveFolderId) {
+      const ok = await deleteDriveFolder(driveFolderId)
+      if (!ok) {
+        setDeleting(false)
+        setDeleteError('No se pudo eliminar la carpeta de Drive. No se eliminó el inmueble.')
+        return
+      }
+    }
+    const { error } = await supabase.from('propiedades').delete().eq('id', id)
+    setDeleting(false)
+    if (error) {
+      setDeleteError('No se pudo eliminar el inmueble.')
+      return
+    }
+    navigate('/admin')
+  }
+
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
       <h1 className="text-h2 font-bold text-primary">{isEdit ? 'Editar inmueble' : 'Nuevo inmueble'}</h1>
@@ -252,6 +286,15 @@ export function PropertyFormPage() {
         ensureFolder={ensureFolder}
         onSynced={reloadProperty}
       />
+
+      {isEdit && canDelete && (
+        <div className="flex flex-col gap-2 border-t border-neutral-300 pt-4">
+          {deleteError && <p className="text-small text-danger">{deleteError}</p>}
+          <Button type="button" variant="danger" onClick={() => void onDelete()} disabled={deleting}>
+            {deleting ? 'Eliminando...' : 'Eliminar inmueble'}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

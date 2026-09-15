@@ -46,6 +46,9 @@ function doPost(e) {
         case 'delete':
           result = deleteFile(body.folderId, body.fileId);
           break;
+        case 'deleteFolder':
+          result = deleteFolder(body.folderId);
+          break;
         case 'setFileVisibility':
           result = setFileVisibility(body.fileId, Boolean(body.isActive));
           break;
@@ -151,4 +154,9 @@ function deleteFile(folderId, fileId) {
     }
   }
   return { error: 'archivo no encontrado en la carpeta' };
+}
+
+function deleteFolder(folderId) {
+  DriveApp.getFolderById(folderId).setTrashed(true);
+  return { ok: true };
 }

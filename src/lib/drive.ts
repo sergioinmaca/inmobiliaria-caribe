@@ -68,3 +68,10 @@ export async function deleteDriveFile(folderId: string, fileId: string): Promise
   })
   return !error
 }
+
+export async function deleteDriveFolder(folderId: string): Promise<boolean> {
+  const { error } = await supabase.functions.invoke('drive', {
+    body: { action: 'deleteFolder', folderId },
+  })
+  return !error
+}

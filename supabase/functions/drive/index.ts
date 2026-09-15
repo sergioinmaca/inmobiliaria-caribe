@@ -5,6 +5,7 @@
 // Acciones: { action: 'createFolder', name } | { action: 'list', folderId }
 //         | { action: 'sync', propertyId, folderId? } | { action: 'setVisibility', propertyId, folderId? }
 //         | { action: 'setFileVisibility', fileId, isActive }
+//         | { action: 'deleteFolder', folderId }
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -125,6 +126,13 @@ Deno.serve(async (req: Request) => {
 
   if (body.action === 'list') {
     const result = await callScript({ action: 'list', folderId: body.folderId })
+    if ('error' in result) return json(result, 400)
+    return json(result)
+  }
+
+  if (body.action === 'deleteFolder') {
+    if (!body.folderId) return json({ error: 'falta folderId' }, 400)
+    const result = await callScript({ action: 'deleteFolder', folderId: body.folderId })
     if ('error' in result) return json(result, 400)
     return json(result)
   }
