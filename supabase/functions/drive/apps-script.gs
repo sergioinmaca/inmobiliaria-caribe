@@ -14,7 +14,7 @@
 //   APPS_SCRIPT_URL    = la URL copiada
 //   APPS_SCRIPT_SECRET = el MISMO valor que pusiste en SCRIPT_SECRET
 
-const SCRIPT_SECRET = '099017849327834';
+const SCRIPT_SECRET = 'CAMBIA_ESTE_SECRETO';
 const ROOT_FOLDER = 'catalogo_inmuebles';
 
 function doPost(e) {
