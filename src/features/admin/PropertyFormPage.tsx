@@ -28,7 +28,6 @@ export function PropertyFormPage() {
   const navigate = useNavigate()
   const { profile } = useSession()
   const [rate, setRate] = useState(0)
-  const [property, setProperty] = useState<Property | null>(null)
   const [images, setImages] = useState<PropertyImage[]>([])
   const [driveFolderId, setDriveFolderId] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -50,8 +49,7 @@ export function PropertyFormPage() {
     if (!id) return
     const { data } = await supabase.from('propiedades').select('*').eq('id', id).single()
     if (data) {
-      const p = data as Property
-      setProperty(p)
+      const p = data as { images: PropertyImage[]; drive_folder_id: string | null }
       setImages(p.images)
       setDriveFolderId(p.drive_folder_id)
     }
@@ -115,7 +113,6 @@ export function PropertyFormPage() {
         if (!active) return
         const p = data as Property | null
         if (p) {
-          setProperty(p)
           setImages(p.images)
           setDriveFolderId(p.drive_folder_id)
           reset({
@@ -292,7 +289,6 @@ export function PropertyFormPage() {
           images={images}
           driveFolderId={driveFolderId}
           propertyId={id}
-          isActive={property?.is_active ?? false}
           onChange={handleImagesChange}
           ensureFolder={ensureFolder}
           onSynced={reloadProperty}

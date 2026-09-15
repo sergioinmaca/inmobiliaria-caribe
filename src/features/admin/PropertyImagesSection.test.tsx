@@ -30,7 +30,6 @@ function renderSection(overrides: Partial<Parameters<typeof PropertyImagesSectio
     images: [] as PropertyImage[],
     driveFolderId: 'folder-1' as string | null,
     propertyId: 'p1' as string | undefined,
-    isActive: false,
     onChange: vi.fn(),
     ensureFolder: vi.fn().mockResolvedValue('folder-1'),
     ...overrides,
@@ -84,7 +83,7 @@ describe('PropertyImagesSection', () => {
     await user.upload(screen.getByLabelText('Agregar fotos'), file)
 
     expect(mockedUploadDriveFile).toHaveBeenCalledWith(
-      expect.objectContaining({ uploadKey: 'foto.png:1:12345' }),
+      expect.objectContaining({ uploadKey: 'foto.png:1:12345', isActive: true }),
     )
     expect(props.onChange).toHaveBeenCalledWith([
       { id: 'f1', name: 'foto.jpg', url: 'u/f1', order: 0 },

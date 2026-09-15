@@ -12,7 +12,6 @@ interface PropertyImagesSectionProps {
   images: PropertyImage[]
   driveFolderId: string | null
   propertyId?: string
-  isActive: boolean
   onChange: (images: PropertyImage[]) => void
   ensureFolder: () => Promise<string | null>
   onSynced?: () => void
@@ -22,7 +21,6 @@ export function PropertyImagesSection({
   images,
   driveFolderId,
   propertyId,
-  isActive,
   onChange,
   ensureFolder,
   onSynced,
@@ -84,7 +82,7 @@ export function PropertyImagesSection({
           name: resized.name,
           mimeType: resized.mimeType,
           data: resized.base64,
-          isActive,
+          isActive: true,
           uploadKey,
         })
         if (!uploaded) throw new Error('sin respuesta')

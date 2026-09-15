@@ -156,8 +156,7 @@ function applyVisibility(folderId, isActive) {
   }
 }
 
-function syncFolder(folderId, isActive) {
-  applyVisibility(folderId, isActive);
+function syncFolder(folderId) {
   const files = getFiles(folderId).map(function (f, i) {
     return {
       id: f.id,
