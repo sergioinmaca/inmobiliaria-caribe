@@ -4,6 +4,7 @@
 // Secrets requeridos: SUPABASE_URL, SUPABASE_ANON_KEY (automáticos), APPS_SCRIPT_URL, APPS_SCRIPT_SECRET.
 // Acciones: { action: 'createFolder', name } | { action: 'list', folderId }
 //         | { action: 'sync', propertyId, folderId? } | { action: 'setVisibility', propertyId, folderId? }
+//         | { action: 'setFileVisibility', fileId, isActive }
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -128,6 +129,17 @@ Deno.serve(async (req: Request) => {
     return json(result)
   }
 
+  if (body.action === 'setFileVisibility') {
+    if (!body.fileId) return json({ error: 'falta fileId' }, 400)
+    const result = await callScript({
+      action: 'setFileVisibility',
+      fileId: body.fileId,
+      isActive: Boolean(body.isActive),
+    })
+    if ('error' in result) return json(result, 400)
+    return json(result)
+  }
+
   if (body.action === 'sync' || body.action === 'setVisibility') {
     if (!body.propertyId) return json({ error: 'falta propertyId' }, 400)
 
@@ -144,7 +156,19 @@ Deno.serve(async (req: Request) => {
     const folderId = body.folderId ?? property?.drive_folder_id ?? ''
     const isActive = property?.is_active ?? false
 
-    if (!folderId) return json({ error: 'sin carpeta de Drive' }, 400)
+    if (!folderId) {
+      const images = property?.images ?? []
+      if (images.length === 0) return json({ error: 'sin carpeta de Drive' }, 400)
+      for (const img of images) {
+        const res = await callScript({
+          action: 'setFileVisibility',
+          fileId: img.id,
+          isActive,
+        })
+        if ('error' in res) return json(res, 400)
+      }
+      return json({ ok: true })
+    }
 
     const result = await callScript({ action: body.action, folderId, isActive })
     if ('error' in result) return json(result, 400)

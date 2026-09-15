@@ -54,9 +54,14 @@ export function PropertyFormPage() {
     if (driveFolderId) return driveFolderId
     const name = `${getValues('tipo')}-${getValues('parroquia')}`
     const folderId = await createDriveFolder(name)
-    if (folderId) setDriveFolderId(folderId)
+    if (folderId) {
+      setDriveFolderId(folderId)
+      if (isEdit && id) {
+        await supabase.from('propiedades').update({ drive_folder_id: folderId }).eq('id', id)
+      }
+    }
     return folderId
-  }, [driveFolderId, getValues])
+  }, [driveFolderId, getValues, isEdit, id])
 
   const handleImagesChange = useCallback(
     async (next: PropertyImage[]) => {

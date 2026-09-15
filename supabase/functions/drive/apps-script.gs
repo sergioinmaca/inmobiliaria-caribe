@@ -14,7 +14,7 @@
 //   APPS_SCRIPT_URL    = la URL copiada
 //   APPS_SCRIPT_SECRET = el MISMO valor que pusiste en SCRIPT_SECRET
 
-const SCRIPT_SECRET = 'CAMBIA_ESTE_SECRETO';
+const SCRIPT_SECRET = '099017849327834';
 const ROOT_FOLDER = 'catalogo_inmuebles';
 
 function doPost(e) {
@@ -45,6 +45,9 @@ function doPost(e) {
           break;
         case 'delete':
           result = deleteFile(body.folderId, body.fileId);
+          break;
+        case 'setFileVisibility':
+          result = setFileVisibility(body.fileId, Boolean(body.isActive));
           break;
         default:
           result = { error: 'accion desconocida' };
@@ -114,6 +117,12 @@ function syncFolder(folderId, isActive) {
 
 function setVisibility(folderId, isActive) {
   applyVisibility(folderId, isActive);
+  return { ok: true };
+}
+
+function setFileVisibility(fileId, isActive) {
+  const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
+  DriveApp.getFileById(fileId).setSharing(access, DriveApp.Permission.VIEW);
   return { ok: true };
 }
 

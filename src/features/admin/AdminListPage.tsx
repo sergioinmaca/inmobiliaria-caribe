@@ -65,9 +65,7 @@ export function AdminListPage() {
       return
     }
     setMessage(null)
-    if (property.drive_folder_id) {
-      void setDriveVisibility(property.id, property.drive_folder_id, !property.is_active)
-    }
+    void setDriveVisibility(property.id, property.drive_folder_id, !property.is_active)
     load()
   }
 
