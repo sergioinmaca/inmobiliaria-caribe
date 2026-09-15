@@ -44,16 +44,18 @@ export function PropertyDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
       <PropertyGallery images={property.images} />
-      <div className="flex flex-col gap-2">
-        <h1 className="text-h1 font-bold text-primary">{property.titulo}</h1>
-        <p className="text-body text-neutral-500">
-          {property.parroquia} · {property.tipo}
-        </p>
-        <p className="text-h2 font-semibold text-primary">{formatPrice(property)}</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-h1 font-bold text-primary">{property.titulo}</h1>
+          <p className="text-body text-neutral-500">
+            {property.parroquia} · {property.tipo}
+          </p>
+          <p className="text-h2 font-semibold text-primary">{formatPrice(property)}</p>
+        </div>
+        <p className="text-body text-neutral-900">{property.description}</p>
       </div>
-      <p className="text-body text-neutral-900">{property.description}</p>
     </div>
   )
 }

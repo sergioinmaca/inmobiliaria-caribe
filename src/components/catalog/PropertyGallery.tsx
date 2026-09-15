@@ -11,7 +11,7 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
       <img
         src="/brand/placeholder-property.svg"
         alt="Sin imágenes disponibles"
-        className="h-64 w-full rounded-md object-cover"
+        className="h-64 w-full rounded-md object-cover md:h-96 lg:h-[30rem]"
       />
     )
   }
@@ -25,13 +25,13 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
       <img
         src={current.url}
         alt={`${current.name} (${index + 1} de ${sorted.length})`}
-        className="h-64 w-full rounded-md object-cover"
+        className="h-64 w-full rounded-md object-cover md:h-96 lg:h-[30rem]"
       />
       <button
         type="button"
         onClick={prev}
         aria-label="Anterior"
-        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-sm bg-white/80 px-2 py-1 text-body"
+        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-sm bg-white/80 px-2 py-1 text-body md:px-3 md:py-2 md:text-h3"
       >
         ‹
       </button>
@@ -39,7 +39,7 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
         type="button"
         onClick={next}
         aria-label="Siguiente"
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm bg-white/80 px-2 py-1 text-body"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm bg-white/80 px-2 py-1 text-body md:px-3 md:py-2 md:text-h3"
       >
         ›
       </button>

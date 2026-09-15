@@ -10,7 +10,7 @@ Modifica el entorno administrativo en tres frentes: el header tras iniciar sesi�
 **Incluye:**
 
 - Header post-login con dos columnas: `Nombre` (arriba) / `Apellido` (abajo) y un botón de menú hamburguesa (3 rayas azul oscuro).
-- Menú hamburguesa que se desliza de derecha a izquierda, con título "Menú Administrativo", opciones "Inmuebles" y "Usuarios" (esta última solo para Master), y fila final con "Correo" y "Cerrar Sesión" (botón rojo `danger`).
+- Menú hamburguesa que se desliza de derecha a izquierda, con título "Panel de Control", opciones "Inmuebles" y "Usuarios" (esta última solo para Master), y fila final con "Correo" y "Cerrar Sesión" (botón rojo `danger`).
 - Módulo de usuarios (solo Master): crear usuario con `nombre`, `apellido`, `teléfono` (opcional), `correo` (parte local + `@inmaca.com`), `contraseña` (mín. 6) y `rol`.
 
 **Excluye:**
@@ -83,7 +83,7 @@ Para visitantes no logueados se mantiene el enlace "Iniciar Sesión".
 Drawer lateral que se desliza de derecha a izquierda:
 
 - Overlay semitransparente + panel fijo a la derecha.
-- Título: **"Menú Administrativo"**.
+- Título: **"Panel de Control"**.
 - Opciones: **"Inmuebles"** → `/admin`; **"Usuarios"** → `/admin/usuarios` (solo si rol `master`).
 - Fila final: **"Correo"** (arriba, `profile.email`) y **"Cerrar Sesión"** (abajo), botón `variant="danger"` que llama a `onSignOut`.
 - Cierre: clic en overlay, botón X, o al navegar a una opción.

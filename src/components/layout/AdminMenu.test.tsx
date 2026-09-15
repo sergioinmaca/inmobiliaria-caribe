@@ -25,7 +25,7 @@ describe('AdminMenu', () => {
         <AdminMenu open profile={profile('gerente')} onClose={vi.fn()} onSignOut={vi.fn()} />
       </MemoryRouter>,
     )
-    expect(screen.getByText('Menú Administrativo')).toBeInTheDocument()
+    expect(screen.getByText('Panel de Control')).toBeInTheDocument()
     expect(screen.getByText('ana@inmaca.com')).toBeInTheDocument()
   })
 

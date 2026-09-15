@@ -133,7 +133,7 @@ La detección se hace bajo demanda (al abrir el inmueble), no por listado global
 - Fondo blanco
 - Logo `horizontal_color.svg`: bloque que ocupa el 85% del ancho, alineado a la izquierda
 - 15% restante (derecha): separador `|` + enlace "Iniciar Sesión"
-- Tras login: el enlace se reemplaza por un menú de usuario (nombre, rol, "Panel administrativo", "Salir")
+- Tras login: el enlace se reemplaza por un menú de usuario (nombre, rol, "Panel de Control", "Salir")
 
 ### 6.2 Landing `/`
 

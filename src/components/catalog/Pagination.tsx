@@ -12,7 +12,7 @@ export function Pagination({ total, page, perPage, onChange }: PaginationProps) 
   const pages = Array.from({ length: pageCount }, (_, i) => i + 1)
 
   return (
-    <nav aria-label="Paginación" className="flex flex-wrap items-center justify-center gap-2">
+    <nav aria-label="Paginación" className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
       {pages.map((p) => (
         <button
           key={p}

@@ -5,6 +5,8 @@
 @layer base {
   html {
     font-family: theme('fontFamily.sans');
+    scrollbar-gutter: stable;
+    overflow-x: hidden;
   }
 
   body {

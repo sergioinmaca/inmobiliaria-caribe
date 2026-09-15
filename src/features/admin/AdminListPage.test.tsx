@@ -51,11 +51,24 @@ describe('AdminListPage', () => {
 
   it('bloquea activar sin imágenes y muestra el error', async () => {
     const user = userEvent.setup()
-    mockedFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        order: vi.fn().mockResolvedValue({ data: [inactiveProperty], error: null }),
-      }),
-    } as unknown as ReturnType<typeof supabase.from>)
+    mockedFrom.mockImplementation(((table: string) => {
+      if (table === 'settings') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi
+                .fn()
+                .mockResolvedValue({ data: { key: 'usd_to_bs_rate', value: '50' }, error: null }),
+            }),
+          }),
+        }
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({ data: [inactiveProperty], error: null }),
+        }),
+      }
+    }) as never)
 
     render(
       <MemoryRouter>
@@ -63,8 +76,8 @@ describe('AdminListPage', () => {
       </MemoryRouter>,
     )
 
-    await screen.findByText('Apto La Florida')
-    await user.click(screen.getByRole('button', { name: 'Activar' }))
+    await screen.findAllByText('Apto La Florida')
+    await user.click(screen.getAllByRole('button', { name: 'Activar' })[0])
 
     expect(await screen.findByText(/se necesita al menos 1 imagen/)).toBeInTheDocument()
   })

@@ -1,5 +1,5 @@
 // src/components/layout/AdminMenu.tsx
-import { Link } from 'react-router-dom'
+import { AdminNav } from './AdminNav'
 import { Button } from '../ui/Button'
 import type { Profile } from '../../types'
 
@@ -21,7 +21,7 @@ export function AdminMenu({ open, profile, onClose, onSignOut }: AdminMenuProps)
         className={`absolute right-0 top-0 flex h-full w-72 flex-col bg-white shadow-lg transition-transform ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex items-center justify-between border-b border-neutral-300 px-4 py-3">
-          <h2 className="text-h3 font-semibold text-primary">Menú Administrativo</h2>
+          <h2 className="text-h3 font-semibold text-primary">Panel de Control</h2>
           <button
             type="button"
             aria-label="Cerrar menú"
@@ -31,24 +31,9 @@ export function AdminMenu({ open, profile, onClose, onSignOut }: AdminMenuProps)
             ✕
           </button>
         </div>
-        <nav className="flex flex-col gap-1 p-4">
-          <Link
-            to="/admin"
-            onClick={onClose}
-            className="rounded-sm px-3 py-2 text-body font-medium text-neutral-900 hover:bg-surface"
-          >
-            Inmuebles
-          </Link>
-          {profile.role === 'master' && (
-            <Link
-              to="/admin/usuarios"
-              onClick={onClose}
-              className="rounded-sm px-3 py-2 text-body font-medium text-neutral-900 hover:bg-surface"
-            >
-              Usuarios
-            </Link>
-          )}
-        </nav>
+        <div className="p-4">
+          <AdminNav role={profile.role} onNavigate={onClose} />
+        </div>
         <div className="mt-auto flex flex-col gap-2 border-t border-neutral-300 p-4">
           <span className="text-small text-neutral-500">{profile.email}</span>
           <Button variant="danger" onClick={onSignOut}>

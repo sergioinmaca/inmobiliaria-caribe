@@ -15,14 +15,14 @@ vi.mock('./lib/supabase', () => ({
 }))
 
 describe('App', () => {
-  it('renderiza el header y la landing', () => {
+  it('renderiza el header y la landing', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <App />
       </MemoryRouter>,
     )
     expect(screen.getByText('Iniciar Sesión')).toBeInTheDocument()
-    expect(screen.getByText('Catálogo de Inmuebles')).toBeInTheDocument()
+    expect(await screen.findByText('Catálogo de Inmuebles')).toBeInTheDocument()
     expect(screen.getByText('Noticias y Reportes')).toBeInTheDocument()
   })
 })

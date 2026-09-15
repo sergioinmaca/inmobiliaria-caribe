@@ -9,49 +9,51 @@ export function CatalogPage() {
     useProperties()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-8">
       <Filters value={filters} onChange={setFilters} />
 
-      {loading ? (
-        <div
-          className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col border-t border-neutral-300"
-          data-testid="catalog-skeleton"
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-44 animate-pulse border-b border-neutral-300 bg-surface" />
-          ))}
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-body text-neutral-500">No se pudo cargar el catálogo.</p>
-          <button
-            type="button"
-            onClick={refetch}
-            className="rounded-sm bg-primary px-4 py-2 text-body font-medium text-white"
+      <div className="flex flex-col gap-6">
+        {loading ? (
+          <div
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+            data-testid="catalog-skeleton"
           >
-            Reintentar
-          </button>
-        </div>
-      ) : properties.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-body text-neutral-500">Sin resultados</p>
-          <button
-            type="button"
-            onClick={() => setFilters(DEFAULT_FILTERS)}
-            className="rounded-sm border border-neutral-300 px-4 py-2 text-body font-medium text-neutral-900"
-          >
-            Limpiar filtros
-          </button>
-        </div>
-      ) : (
-        <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col border-t border-neutral-300">
-          {properties.map((p) => (
-            <PropertyCard key={p.id} property={p} />
-          ))}
-        </div>
-      )}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-64 animate-pulse rounded-md bg-surface" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <p className="text-body text-neutral-500">No se pudo cargar el catálogo.</p>
+            <button
+              type="button"
+              onClick={refetch}
+              className="rounded-sm bg-primary px-4 py-2 text-body font-medium text-white"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <p className="text-body text-neutral-500">Sin resultados</p>
+            <button
+              type="button"
+              onClick={() => setFilters(DEFAULT_FILTERS)}
+              className="rounded-sm border border-neutral-300 px-4 py-2 text-body font-medium text-neutral-900"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {properties.map((p) => (
+              <PropertyCard key={p.id} property={p} />
+            ))}
+          </div>
+        )}
 
-      <Pagination total={total} page={page} perPage={ITEMS_PER_PAGE} onChange={setPage} />
+        <Pagination total={total} page={page} perPage={ITEMS_PER_PAGE} onChange={setPage} />
+      </div>
     </div>
   )
 }

@@ -197,73 +197,83 @@ export function PropertyFormPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 lg:max-w-3xl">
       <h1 className="text-h2 font-bold text-primary">{isEdit ? 'Editar inmueble' : 'Nuevo inmueble'}</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <Input id="titulo" label="Título" {...register('titulo')} />
         {errors.titulo && <p className="text-small text-danger">{errors.titulo.message}</p>}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="tipo" className="text-small font-medium text-neutral-900">
-            Tipo
-          </label>
-          <select
-            id="tipo"
-            {...register('tipo')}
-            className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
-          >
-            {PROPERTY_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="tipo" className="text-small font-medium text-neutral-900">
+              Tipo
+            </label>
+            <select
+              id="tipo"
+              {...register('tipo')}
+              className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
+            >
+              {PROPERTY_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="parroquia" className="text-small font-medium text-neutral-900">
+              Parroquia
+            </label>
+            <select
+              id="parroquia"
+              {...register('parroquia')}
+              className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
+            >
+              <option value="">Selecciona una parroquia</option>
+              {PARROQUIAS.map((z) => (
+                <option key={z} value={z}>
+                  {z}
+                </option>
+              ))}
+            </select>
+            {errors.parroquia && (
+              <p className="text-small text-danger">{errors.parroquia.message}</p>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="parroquia" className="text-small font-medium text-neutral-900">
-            Parroquia
-          </label>
-          <select
-            id="parroquia"
-            {...register('parroquia')}
-            className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
-          >
-            <option value="">Selecciona una parroquia</option>
-            {PARROQUIAS.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </select>
-        </div>
-        {errors.parroquia && <p className="text-small text-danger">{errors.parroquia.message}</p>}
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="priceMode" className="text-small font-medium text-neutral-900">
+              Precio
+            </label>
+            <select
+              id="priceMode"
+              {...register('priceMode')}
+              className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
+            >
+              <option value="ref">Referencia (REF.)</option>
+              <option value="usd">Dólares ($)</option>
+              <option value="bs">Bolívares (Bs)</option>
+            </select>
+          </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="priceMode" className="text-small font-medium text-neutral-900">
-            Precio
-          </label>
-          <select
-            id="priceMode"
-            {...register('priceMode')}
-            className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
-          >
-            <option value="ref">Referencia (REF.)</option>
-            <option value="usd">Dólares ($)</option>
-            <option value="bs">Bolívares (Bs)</option>
-          </select>
+          <div className="flex flex-col gap-1">
+            <Input
+              id="priceAmount"
+              label="Monto"
+              type="number"
+              inputMode="decimal"
+              step="any"
+              {...register('priceAmount', { setValueAs: (v) => (v === '' ? null : Number(v)) })}
+            />
+            {errors.priceAmount && (
+              <p className="text-small text-danger">{errors.priceAmount.message}</p>
+            )}
+          </div>
         </div>
-
-        <Input
-          id="priceAmount"
-          label="Monto"
-          type="number"
-          inputMode="decimal"
-          step="any"
-          {...register('priceAmount', { setValueAs: (v) => (v === '' ? null : Number(v)) })}
-        />
-        {errors.priceAmount && <p className="text-small text-danger">{errors.priceAmount.message}</p>}
 
         <div className="flex flex-col gap-1">
           <label htmlFor="description" className="text-small font-medium text-neutral-900">

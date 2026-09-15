@@ -6,7 +6,7 @@ Plataforma web de la **Inmobiliaria Municipal Caribe**, entidad que administra y
 
 La plataforma tiene doble propósito:
 - **Cara externa (pública):** Catálogo de inmuebles + sección de Noticias/Labor Social (próximamente).
-- **Cara interna (privada):** Panel administrativo para gestionar el catálogo de inmuebles.
+- **Cara interna (privada):** Panel de Control para gestionar el catálogo de inmuebles.
 
 ---
 
@@ -250,7 +250,7 @@ Cuatro roles para el sistema administrativo, aplicados vía Supabase (tabla de u
 ### Header público (global)
 - Fondo blanco; logo `horizontal_color.svg` ocupando el 85% del ancho (izquierda)
 - 15% restante (derecha): separador `|` + enlace "Iniciar Sesión"
-- Tras login: menú de usuario (nombre, rol, "Panel administrativo", "Salir")
+- Tras login: menú de usuario (nombre, rol, "Panel de Control", "Salir")
 
 ### Landing `/`
 - Sección 1: banner de identidad (.png) — placeholder `/public/brand/banner-placeholder.png`

@@ -1,17 +1,20 @@
+import type { ReactNode } from 'react'
 import { PROPERTY_TYPES, PARROQUIAS } from '../../lib/constants'
 import type { PropertyFilters } from '../../hooks/useProperties'
 
 interface FiltersProps {
   value: PropertyFilters
   onChange: (filters: PropertyFilters) => void
+  children?: ReactNode
 }
 
-export function Filters({ value, onChange }: FiltersProps) {
+export function Filters({ value, onChange, children }: FiltersProps) {
   const set = (patch: Partial<PropertyFilters>) => onChange({ ...value, ...patch })
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-neutral-300 bg-white p-4">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-3 rounded-md bg-white p-4">
+      <h2 className="text-h3 font-semibold text-primary">Filtros</h2>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-1">
         <div className="flex flex-col gap-1">
           <label htmlFor="filter-type" className="text-small font-medium text-neutral-900">
             Tipo
@@ -48,8 +51,6 @@ export function Filters({ value, onChange }: FiltersProps) {
             ))}
           </select>
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label htmlFor="filter-min" className="text-small font-medium text-neutral-900">
             Precio mín. (USD)
@@ -79,6 +80,7 @@ export function Filters({ value, onChange }: FiltersProps) {
           />
         </div>
       </div>
+      {children}
     </div>
   )
 }

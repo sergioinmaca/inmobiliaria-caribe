@@ -1,52 +1,73 @@
+import { lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { LandingPage } from '../features/LandingPage'
-import { CatalogPage } from '../features/catalog/CatalogPage'
-import { PropertyDetailPage } from '../features/catalog/PropertyDetailPage'
-import { LoginPage } from '../features/admin/LoginPage'
 import { RequireRole } from '../features/admin/RequireRole'
-import { AdminListPage } from '../features/admin/AdminListPage'
-import { PropertyFormPage } from '../features/admin/PropertyFormPage'
-import { UsersPage } from '../features/admin/UsersPage'
+import { AdminLayout } from '../components/layout/AdminLayout'
+import { PublicLayout } from '../components/layout/PublicLayout'
+
+const LandingPage = lazy(() =>
+  import('../features/LandingPage').then((m) => ({ default: m.LandingPage })),
+)
+const CatalogPage = lazy(() =>
+  import('../features/catalog/CatalogPage').then((m) => ({ default: m.CatalogPage })),
+)
+const PropertyDetailPage = lazy(() =>
+  import('../features/catalog/PropertyDetailPage').then((m) => ({ default: m.PropertyDetailPage })),
+)
+const LoginPage = lazy(() =>
+  import('../features/admin/LoginPage').then((m) => ({ default: m.LoginPage })),
+)
+const AdminListPage = lazy(() =>
+  import('../features/admin/AdminListPage').then((m) => ({ default: m.AdminListPage })),
+)
+const PropertyFormPage = lazy(() =>
+  import('../features/admin/PropertyFormPage').then((m) => ({ default: m.PropertyFormPage })),
+)
+const UsersPage = lazy(() =>
+  import('../features/admin/UsersPage').then((m) => ({ default: m.UsersPage })),
+)
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/catalogo" element={<CatalogPage />} />
-      <Route path="/inmueble/:id" element={<PropertyDetailPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/catalogo" element={<CatalogPage />} />
+        <Route path="/inmueble/:id" element={<PropertyDetailPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Route>
       <Route
-        path="/admin"
         element={
           <RequireRole roles={['master', 'gerente', 'supervisor', 'invitado']}>
-            <AdminListPage />
+            <AdminLayout />
           </RequireRole>
         }
-      />
-      <Route
-        path="/admin/inmueble"
-        element={
-          <RequireRole roles={['master', 'gerente']}>
-            <PropertyFormPage />
-          </RequireRole>
-        }
-      />
-      <Route
-        path="/admin/inmueble/:id"
-        element={
-          <RequireRole roles={['master', 'gerente', 'supervisor']}>
-            <PropertyFormPage />
-          </RequireRole>
-        }
-      />
-      <Route
-        path="/admin/usuarios"
-        element={
-          <RequireRole roles={['master']}>
-            <UsersPage />
-          </RequireRole>
-        }
-      />
+      >
+        <Route path="admin" element={<AdminListPage />} />
+        <Route
+          path="admin/inmueble"
+          element={
+            <RequireRole roles={['master', 'gerente']}>
+              <PropertyFormPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="admin/inmueble/:id"
+          element={
+            <RequireRole roles={['master', 'gerente', 'supervisor']}>
+              <PropertyFormPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="admin/usuarios"
+          element={
+            <RequireRole roles={['master']}>
+              <UsersPage />
+            </RequireRole>
+          }
+        />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rediseñar el header post-login (nombre/apellido + menú hamburguesa), agregar un drawer lateral "Menú Administrativo" y permitir al Master crear usuarios con contraseña directa y correo `@inmaca.com`.
+**Goal:** Rediseñar el header post-login (nombre/apellido + menú hamburguesa), agregar un drawer lateral "Panel de Control" y permitir al Master crear usuarios con contraseña directa y correo `@inmaca.com`.
 
 **Architecture:** Se amplía `profiles` con `first_name`, `last_name`, `phone` y `email` (denormalizado desde `auth.users`). La Edge Function `admin` cambia de invitación a `createUser` con `email_confirm: true` usando la service role key. El header y el nuevo `AdminMenu` (drawer que se desliza de derecha a izquierda) consumen el `Profile` ampliado.
 
@@ -458,7 +458,7 @@ describe('AdminMenu', () => {
         <AdminMenu open profile={profile('gerente')} onClose={vi.fn()} onSignOut={vi.fn()} />
       </MemoryRouter>,
     )
-    expect(screen.getByText('Menú Administrativo')).toBeInTheDocument()
+    expect(screen.getByText('Panel de Control')).toBeInTheDocument()
     expect(screen.getByText('ana@inmaca.com')).toBeInTheDocument()
   })
 
@@ -522,7 +522,7 @@ export function AdminMenu({ open, profile, onClose, onSignOut }: AdminMenuProps)
         className={`absolute right-0 top-0 flex h-full w-72 flex-col bg-white shadow-lg transition-transform ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex items-center justify-between border-b border-neutral-300 px-4 py-3">
-          <h2 className="text-h3 font-semibold text-primary">Menú Administrativo</h2>
+          <h2 className="text-h3 font-semibold text-primary">Panel de Control</h2>
           <button
             type="button"
             aria-label="Cerrar menú"
