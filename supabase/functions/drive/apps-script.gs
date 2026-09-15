@@ -29,7 +29,7 @@ function doPost(e) {
     } else {
       switch (body.action) {
         case 'createFolder':
-          result = createFolder(body.name);
+          result = createFolder(body.name, body.folderKey);
           break;
         case 'list':
           result = listFolder(body.folderId);
@@ -41,16 +41,22 @@ function doPost(e) {
           result = setVisibility(body.folderId, Boolean(body.isActive));
           break;
         case 'upload':
-          result = uploadFile(body.folderId, body.name, body.mimeType, body.data, Boolean(body.isActive));
+          result = uploadFile(body.folderId, body.name, body.mimeType, body.data, body.uploadKey, Boolean(body.isActive));
           break;
         case 'delete':
           result = deleteFile(body.folderId, body.fileId);
+          break;
+        case 'deleteFileById':
+          result = deleteFileById(body.fileId);
           break;
         case 'deleteFolder':
           result = deleteFolder(body.folderId);
           break;
         case 'setFileVisibility':
           result = setFileVisibility(body.fileId, Boolean(body.isActive));
+          break;
+        case 'getFolderInfo':
+          result = getFolderInfo(body.folderId);
           break;
         default:
           result = { error: 'accion desconocida' };
@@ -66,18 +72,63 @@ function doPost(e) {
 
 function getRootFolder() {
   const it = DriveApp.getFoldersByName(ROOT_FOLDER);
-  if (it.hasNext()) return it.next();
+  while (it.hasNext()) {
+    const f = it.next();
+    if (!f.isTrashed()) return f;
+  }
   return DriveApp.createFolder(ROOT_FOLDER);
 }
 
-function createFolder(rawName) {
-  const name = String(rawName || '')
+function getFolderInfo(folderId) {
+  const folder = DriveApp.getFolderById(folderId);
+
+  const parents = [];
+  let current = folder;
+  try {
+    let pit = current.getParents();
+    while (pit.hasNext()) {
+      const p = pit.next();
+      parents.push({ id: p.getId(), name: p.getName(), trashed: p.isTrashed() });
+      current = p;
+      pit = current.getParents();
+    }
+  } catch (e) {}
+
+  const roots = [];
+  const rit = DriveApp.getFoldersByName(ROOT_FOLDER);
+  while (rit.hasNext()) {
+    const r = rit.next();
+    roots.push({ id: r.getId(), name: r.getName(), trashed: r.isTrashed() });
+  }
+
+  let account = null;
+  try {
+    account = Session.getEffectiveUser().getEmail();
+  } catch (e) {}
+
+  return {
+    folderName: folder.getName(),
+    folderId: folder.getId(),
+    trashed: folder.isTrashed(),
+    parents: parents,
+    roots: roots,
+    account: account,
+  };
+}
+
+function createFolder(rawName, folderKey) {
+  const base = String(rawName || '')
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
-  const suffix = Utilities.getUuid().slice(0, 8);
-  const folderName = name + '-' + suffix;
-  const folder = getRootFolder().createFolder(folderName);
+  const folderName = base + '-' + (folderKey || Utilities.getUuid().slice(0, 8));
+  const root = getRootFolder();
+  const it = root.getFoldersByName(folderName);
+  while (it.hasNext()) {
+    const f = it.next();
+    if (!f.isTrashed()) return { folderId: f.getId(), folderName: f.getName() };
+  }
+  const folder = root.createFolder(folderName);
   return { folderId: folder.getId(), folderName: folder.getName() };
 }
 
@@ -129,12 +180,29 @@ function setFileVisibility(fileId, isActive) {
   return { ok: true };
 }
 
-function uploadFile(folderId, name, mimeType, data, isActive) {
+function uploadFile(folderId, name, mimeType, data, uploadKey, isActive) {
+  const folder = DriveApp.getFolderById(folderId);
+  const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
+
+  if (uploadKey) {
+    const it = folder.getFiles();
+    while (it.hasNext()) {
+      const f = it.next();
+      if (f.getDescription() === uploadKey) {
+        f.setSharing(access, DriveApp.Permission.VIEW);
+        return {
+          id: f.getId(),
+          name: f.getName(),
+          url: 'https://lh3.googleusercontent.com/d/' + f.getId(),
+        };
+      }
+    }
+  }
+
   const bytes = Utilities.base64Decode(String(data || ''));
   const blob = Utilities.newBlob(bytes, mimeType || 'image/jpeg', name);
-  const folder = DriveApp.getFolderById(folderId);
   const file = folder.createFile(blob);
-  const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
+  if (uploadKey) file.setDescription(uploadKey);
   file.setSharing(access, DriveApp.Permission.VIEW);
   return {
     id: file.getId(),
@@ -156,7 +224,17 @@ function deleteFile(folderId, fileId) {
   return { error: 'archivo no encontrado en la carpeta' };
 }
 
+function deleteFileById(fileId) {
+  DriveApp.getFileById(fileId).setTrashed(true);
+  return { ok: true };
+}
+
 function deleteFolder(folderId) {
-  DriveApp.getFolderById(folderId).setTrashed(true);
+  const folder = DriveApp.getFolderById(folderId);
+  const it = folder.getFiles();
+  while (it.hasNext()) {
+    it.next().setTrashed(true);
+  }
+  folder.setTrashed(true);
   return { ok: true };
 }

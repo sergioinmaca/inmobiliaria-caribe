@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { supabase } from '../../lib/supabase'
-import { createDriveFolder, deleteDriveFolder } from '../../lib/drive'
+import { createDriveFolder, deletePropertyFiles } from '../../lib/drive'
 import { normalizePriceUsd } from '../../lib/price'
 import { PROPERTY_TYPES, PARROQUIAS } from '../../lib/constants'
 import { PropertyImagesSection } from './PropertyImagesSection'
@@ -34,6 +34,7 @@ export function PropertyFormPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [folderKey] = useState(() => Math.random().toString(36).slice(2, 10))
 
   const canDelete = profile?.role === 'master' || profile?.role === 'gerente'
 
@@ -58,8 +59,20 @@ export function PropertyFormPage() {
 
   const ensureFolder = useCallback(async () => {
     if (driveFolderId) return driveFolderId
+    if (isEdit && id) {
+      const { data } = await supabase
+        .from('propiedades')
+        .select('drive_folder_id')
+        .eq('id', id)
+        .single()
+      const existing = (data as { drive_folder_id: string | null } | null)?.drive_folder_id
+      if (existing) {
+        setDriveFolderId(existing)
+        return existing
+      }
+    }
     const name = `${getValues('tipo')}-${getValues('parroquia')}`
-    const folderId = await createDriveFolder(name)
+    const folderId = await createDriveFolder(name, isEdit && id ? id : folderKey)
     if (folderId) {
       setDriveFolderId(folderId)
       if (isEdit && id) {
@@ -67,7 +80,7 @@ export function PropertyFormPage() {
       }
     }
     return folderId
-  }, [driveFolderId, getValues, isEdit, id])
+  }, [driveFolderId, getValues, isEdit, id, folderKey])
 
   const handleImagesChange = useCallback(
     async (next: PropertyImage[]) => {
@@ -146,9 +159,10 @@ export function PropertyFormPage() {
       return
     }
 
-    let folderId = driveFolderId
+    const folderId = await createDriveFolder(`${values.tipo}-${values.parroquia}`, folderKey)
     if (!folderId) {
-      folderId = await createDriveFolder(`${values.tipo}-${values.parroquia}`)
+      setSubmitError('No se pudo crear la carpeta de Drive. Inténtalo de nuevo.')
+      return
     }
 
     const { error } = await supabase
@@ -172,20 +186,16 @@ export function PropertyFormPage() {
     }
     setDeleteError(null)
     setDeleting(true)
-    if (driveFolderId) {
-      const ok = await deleteDriveFolder(driveFolderId)
-      if (!ok) {
-        setDeleting(false)
-        setDeleteError('No se pudo eliminar la carpeta de Drive. No se eliminó el inmueble.')
-        return
-      }
-    }
+    const fileIds = images.map((img) => img.id)
+    const folderId = driveFolderId
     const { error } = await supabase.from('propiedades').delete().eq('id', id)
-    setDeleting(false)
     if (error) {
+      setDeleting(false)
       setDeleteError('No se pudo eliminar el inmueble.')
       return
     }
+    await deletePropertyFiles({ fileIds, folderId })
+    setDeleting(false)
     navigate('/admin')
   }
 
@@ -277,15 +287,25 @@ export function PropertyFormPage() {
         </Button>
       </form>
 
-      <PropertyImagesSection
-        images={images}
-        driveFolderId={driveFolderId}
-        propertyId={id}
-        isActive={property?.is_active ?? false}
-        onChange={handleImagesChange}
-        ensureFolder={ensureFolder}
-        onSynced={reloadProperty}
-      />
+      {isEdit ? (
+        <PropertyImagesSection
+          images={images}
+          driveFolderId={driveFolderId}
+          propertyId={id}
+          isActive={property?.is_active ?? false}
+          onChange={handleImagesChange}
+          ensureFolder={ensureFolder}
+          onSynced={reloadProperty}
+        />
+      ) : (
+        <div className="flex flex-col gap-2 rounded-md border border-neutral-300 bg-white p-4">
+          <h3 className="text-h3 font-semibold text-neutral-900">Imágenes</h3>
+          <p className="text-small text-neutral-500">
+            Las imágenes se agregan después de crear el inmueble. Guarda los datos y luego edítalo
+            para subir las fotos.
+          </p>
+        </div>
+      )}
 
       {isEdit && canDelete && (
         <div className="flex flex-col gap-2 border-t border-neutral-300 pt-4">

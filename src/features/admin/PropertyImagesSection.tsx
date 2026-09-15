@@ -78,19 +78,23 @@ export function PropertyImagesSection({
       setProgress({ current: i + 1, total: fileList.length, name: file.name })
       try {
         const resized = await resizeImage(file)
+        const uploadKey = `${file.name}:${file.size}:${file.lastModified}`
         const uploaded = await uploadDriveFile({
           folderId,
           name: resized.name,
           mimeType: resized.mimeType,
           data: resized.base64,
           isActive,
+          uploadKey,
         })
         if (!uploaded) throw new Error('sin respuesta')
-        const next = [
-          ...imagesRef.current,
-          { id: uploaded.id, url: uploaded.url, name: uploaded.name, order: imagesRef.current.length },
-        ]
-        onChange(next)
+        if (!imagesRef.current.some((img) => img.id === uploaded.id)) {
+          const next = [
+            ...imagesRef.current,
+            { id: uploaded.id, url: uploaded.url, name: uploaded.name, order: imagesRef.current.length },
+          ]
+          onChange(next)
+        }
         successCount++
       } catch {
         failedCount++

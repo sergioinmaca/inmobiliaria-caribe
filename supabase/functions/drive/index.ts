@@ -6,6 +6,7 @@
 //         | { action: 'sync', propertyId, folderId? } | { action: 'setVisibility', propertyId, folderId? }
 //         | { action: 'setFileVisibility', fileId, isActive }
 //         | { action: 'deleteFolder', folderId }
+//         | { action: 'deletePropertyFiles', fileIds, folderId? }
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -46,19 +47,53 @@ function json(body: unknown, status = 200) {
   })
 }
 
-async function callScript(payload: Record<string, unknown>) {
+async function callScript(payload: Record<string, unknown>, options?: { retries?: number }) {
   const url = Deno.env.get('APPS_SCRIPT_URL')
   const secret = Deno.env.get('APPS_SCRIPT_SECRET')
   if (!url || !secret) return { error: 'faltan secrets de Apps Script' }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, secret }),
-  })
-  const data = await res.json()
-  if (data?.error) return { error: String(data.error) }
-  return data
+  const maxAttempts = options?.retries ?? 3
+  let lastError: string | null = null
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      let res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, secret }),
+        redirect: 'manual',
+      })
+
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get('location')
+        if (loc) {
+          res = await fetch(loc, {
+            method: 'GET',
+            headers: { Accept: 'application/json,text/plain,*/*' },
+          })
+        }
+      }
+
+      const text = await res.text()
+      let data: unknown
+      try {
+        data = JSON.parse(text)
+      } catch {
+        throw new Error(`Apps Script no devolvió JSON (HTTP ${res.status})`)
+      }
+      if ((data as { error?: string })?.error) return { error: String((data as { error: string }).error) }
+      return data
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err)
+      console.error(`[callScript] intento ${attempt + 1}/${maxAttempts} falló: ${lastError}`)
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)))
+      }
+    }
+  }
+
+  console.error('[callScript] reintentos agotados', lastError)
+  return { error: 'Apps Script no respondió correctamente' }
 }
 
 Deno.serve(async (req: Request) => {
@@ -87,22 +122,29 @@ Deno.serve(async (req: Request) => {
   const body = (await req.json()) as {
     action: string
     name?: string
+    folderKey?: string
     folderId?: string
     fileId?: string
     propertyId?: string
+    fileIds?: string[]
     mimeType?: string
     data?: string
+    uploadKey?: string
     isActive?: boolean
   }
 
   if (body.action === 'createFolder') {
-    const result = await callScript({ action: 'createFolder', name: body.name ?? '' })
+    const result = await callScript({
+      action: 'createFolder',
+      name: body.name ?? '',
+      folderKey: body.folderKey,
+    })
     if ('error' in result) return json(result, 400)
     return json(result)
   }
 
   if (body.action === 'upload') {
-    const { folderId, name, mimeType, data, isActive } = body
+    const { folderId, name, mimeType, data, uploadKey, isActive } = body
     if (!folderId || !data) return json({ error: 'faltan datos' }, 400)
     const result = await callScript({
       action: 'upload',
@@ -110,6 +152,7 @@ Deno.serve(async (req: Request) => {
       name,
       mimeType,
       data,
+      uploadKey,
       isActive: Boolean(isActive),
     })
     if ('error' in result) return json(result, 400)
@@ -135,6 +178,19 @@ Deno.serve(async (req: Request) => {
     const result = await callScript({ action: 'deleteFolder', folderId: body.folderId })
     if ('error' in result) return json(result, 400)
     return json(result)
+  }
+
+  if (body.action === 'deletePropertyFiles') {
+    const fileIds = (body.fileIds ?? []) as string[]
+    for (const fileId of fileIds) {
+      const res = await callScript({ action: 'deleteFileById', fileId })
+      if ('error' in res) console.error('[deletePropertyFiles] archivo no eliminado', fileId, res.error)
+    }
+    if (body.folderId) {
+      const res = await callScript({ action: 'deleteFolder', folderId: body.folderId })
+      if ('error' in res) console.error('[deletePropertyFiles] carpeta no eliminada', body.folderId, res.error)
+    }
+    return json({ ok: true })
   }
 
   if (body.action === 'setFileVisibility') {

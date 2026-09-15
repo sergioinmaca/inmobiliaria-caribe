@@ -5,13 +5,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PropertyFormPage } from './PropertyFormPage'
 import { useSession } from '../../hooks/useSession'
 import { supabase } from '../../lib/supabase'
-import { deleteDriveFolder, listDriveFiles } from '../../lib/drive'
+import { deletePropertyFiles, listDriveFiles } from '../../lib/drive'
 
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }))
 vi.mock('../../lib/supabase', () => ({ supabase: { from: vi.fn() } }))
 vi.mock('../../lib/drive', () => ({
   createDriveFolder: vi.fn(),
   deleteDriveFolder: vi.fn(),
+  deletePropertyFiles: vi.fn(),
   listDriveFiles: vi.fn().mockResolvedValue([]),
   uploadDriveFile: vi.fn(),
   deleteDriveFile: vi.fn(),
@@ -20,7 +21,7 @@ vi.mock('../../lib/drive', () => ({
 
 const mockedUseSession = vi.mocked(useSession)
 const mockedFrom = vi.mocked(supabase.from)
-const mockedDeleteDriveFolder = vi.mocked(deleteDriveFolder)
+const mockedDeletePropertyFiles = vi.mocked(deletePropertyFiles)
 const mockedListDriveFiles = vi.mocked(listDriveFiles)
 
 const property = {
@@ -73,7 +74,7 @@ function renderPage() {
 describe('PropertyFormPage — eliminar inmueble', () => {
   beforeEach(() => {
     mockedFrom.mockReset()
-    mockedDeleteDriveFolder.mockReset()
+    mockedDeletePropertyFiles.mockReset()
     mockedListDriveFiles.mockReset()
     mockedListDriveFiles.mockResolvedValue([])
     deleteEq.mockClear()
@@ -95,9 +96,9 @@ describe('PropertyFormPage — eliminar inmueble', () => {
     })
   })
 
-  it('borra la carpeta de Drive, la fila y navega al listado', async () => {
+  it('borra la fila, las fotos de Drive y navega al listado', async () => {
     const user = userEvent.setup()
-    mockedDeleteDriveFolder.mockResolvedValue(true)
+    mockedDeletePropertyFiles.mockResolvedValue(true)
     vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     renderPage()
@@ -105,21 +106,21 @@ describe('PropertyFormPage — eliminar inmueble', () => {
     await screen.findByRole('button', { name: 'Eliminar inmueble' })
     await user.click(screen.getByRole('button', { name: 'Eliminar inmueble' }))
 
-    expect(mockedDeleteDriveFolder).toHaveBeenCalledWith('folder-1')
     expect(deleteEq).toHaveBeenCalledWith('id', 'p1')
+    expect(mockedDeletePropertyFiles).toHaveBeenCalledWith({ fileIds: [], folderId: 'folder-1' })
     expect(await screen.findByText('Listado admin')).toBeInTheDocument()
   })
 
   it('no borra si el usuario cancela la confirmación', async () => {
     const user = userEvent.setup()
-    mockedDeleteDriveFolder.mockResolvedValue(true)
+    mockedDeletePropertyFiles.mockResolvedValue(true)
     vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     renderPage()
 
     await user.click(await screen.findByRole('button', { name: 'Eliminar inmueble' }))
 
-    expect(mockedDeleteDriveFolder).not.toHaveBeenCalled()
+    expect(mockedDeletePropertyFiles).not.toHaveBeenCalled()
     expect(deleteEq).not.toHaveBeenCalled()
   })
 
@@ -144,5 +145,20 @@ describe('PropertyFormPage — eliminar inmueble', () => {
 
     await screen.findByText('Editar inmueble')
     expect(screen.queryByRole('button', { name: 'Eliminar inmueble' })).not.toBeInTheDocument()
+  })
+
+  it('en creación muestra el aviso y no habilita subir fotos', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/inmueble']}>
+        <Routes>
+          <Route path="/admin/inmueble" element={<PropertyFormPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      await screen.findByText(/Las imágenes se agregan después de crear el inmueble/),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Agregar fotos')).not.toBeInTheDocument()
   })
 })

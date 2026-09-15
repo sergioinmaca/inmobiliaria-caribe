@@ -40,9 +40,9 @@ export interface UploadedDriveFile {
   url: string
 }
 
-export async function createDriveFolder(name: string): Promise<string | null> {
+export async function createDriveFolder(name: string, folderKey?: string): Promise<string | null> {
   const { data, error } = await supabase.functions.invoke('drive', {
-    body: { action: 'createFolder', name },
+    body: { action: 'createFolder', name, folderKey },
   })
   if (error || !data?.folderId) return null
   return data.folderId as string
@@ -54,6 +54,7 @@ export async function uploadDriveFile(params: {
   mimeType: string
   data: string
   isActive: boolean
+  uploadKey: string
 }): Promise<UploadedDriveFile | null> {
   const { data, error } = await supabase.functions.invoke('drive', {
     body: { action: 'upload', ...params },
@@ -72,6 +73,20 @@ export async function deleteDriveFile(folderId: string, fileId: string): Promise
 export async function deleteDriveFolder(folderId: string): Promise<boolean> {
   const { error } = await supabase.functions.invoke('drive', {
     body: { action: 'deleteFolder', folderId },
+  })
+  return !error
+}
+
+export async function deletePropertyFiles(params: {
+  fileIds: string[]
+  folderId: string | null
+}): Promise<boolean> {
+  const { error } = await supabase.functions.invoke('drive', {
+    body: {
+      action: 'deletePropertyFiles',
+      fileIds: params.fileIds,
+      folderId: params.folderId ?? undefined,
+    },
   })
   return !error
 }

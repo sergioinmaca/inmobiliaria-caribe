@@ -80,12 +80,27 @@ describe('PropertyImagesSection', () => {
     mockedResizeImage.mockResolvedValue({ base64: 'abc', mimeType: 'image/jpeg', name: 'foto.jpg' })
     mockedUploadDriveFile.mockResolvedValue({ id: 'f1', name: 'foto.jpg', url: 'u/f1' })
 
-    const file = new File(['x'], 'foto.png', { type: 'image/png' })
+    const file = new File(['x'], 'foto.png', { type: 'image/png', lastModified: 12345 })
     await user.upload(screen.getByLabelText('Agregar fotos'), file)
 
+    expect(mockedUploadDriveFile).toHaveBeenCalledWith(
+      expect.objectContaining({ uploadKey: 'foto.png:1:12345' }),
+    )
     expect(props.onChange).toHaveBeenCalledWith([
       { id: 'f1', name: 'foto.jpg', url: 'u/f1', order: 0 },
     ])
+  })
+
+  it('no duplica si la foto ya existe (idempotente)', async () => {
+    const user = userEvent.setup()
+    const props = renderSection({ images: [img('f1', 0)] })
+    mockedResizeImage.mockResolvedValue({ base64: 'abc', mimeType: 'image/jpeg', name: 'foto.jpg' })
+    mockedUploadDriveFile.mockResolvedValue({ id: 'f1', name: 'foto.jpg', url: 'u/f1' })
+
+    const file = new File(['x'], 'foto.png', { type: 'image/png' })
+    await user.upload(screen.getByLabelText('Agregar fotos'), file)
+
+    expect(props.onChange).not.toHaveBeenCalled()
   })
 
   it('reordena con el botón subir', async () => {
