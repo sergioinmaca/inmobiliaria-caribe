@@ -14,18 +14,25 @@ import { authenticate, requireRole, type AuthContext } from '../_shared/auth.ts'
 import { ApiError, json } from '../_shared/http.ts'
 import type { PriceCurrency, PropertyImage } from '../_shared/types.ts'
 
-const PROPERTY_TYPES = ['apartamento', 'casa', 'local']
 /** Decisión de negocio (Fase 1): mínimo de imágenes para activar. */
 const MIN_IMAGES_TO_ACTIVATE = 1
 
 interface PropertyInput {
   titulo: string
-  tipo: string
-  parroquia: string
+  tipo_id: string
+  estado_id?: string | null
+  municipio_id?: string | null
+  parroquia_id?: string | null
+  parroquia?: string | null
   description?: string
   price_is_ref: boolean
   price_currency: PriceCurrency | null
   price_original: number | null
+  habitaciones?: number | null
+  banos?: number | null
+  puestos_estacionamiento?: number | null
+  metros_construccion?: number | null
+  metros_terreno?: number | null
 }
 
 interface PropertyBody {
@@ -37,18 +44,81 @@ interface PropertyBody {
   isActive?: boolean
 }
 
-function validateInput(input: PropertyInput): void {
-  if (!input.titulo?.trim()) throw new ApiError(400, 'el título es obligatorio')
-  if (!PROPERTY_TYPES.includes(input.tipo)) throw new ApiError(400, 'tipo inválido')
-  if (!input.parroquia?.trim()) throw new ApiError(400, 'la parroquia es obligatoria')
-  if (!input.price_is_ref) {
-    if (input.price_original == null || input.price_original <= 0) {
-      throw new ApiError(400, 'el monto debe ser mayor a 0')
-    }
-    if (input.price_currency !== 'usd' && input.price_currency !== 'bs') {
-      throw new ApiError(400, 'moneda inválida')
+const METRIC_FIELDS = [
+  'habitaciones',
+  'banos',
+  'puestos_estacionamiento',
+  'metros_construccion',
+  'metros_terreno',
+] as const
+
+function validateMetrics(input: PropertyInput): void {
+  for (const field of METRIC_FIELDS) {
+    const value = input[field]
+    if (value === undefined || value === null) continue
+    if (typeof value !== 'number' || Number.isNaN(value) || value < 0) {
+      throw new ApiError(400, `valor inválido en ${field}`)
     }
   }
+}
+
+/** Resuelve y valida el tipo de inmueble en el servidor. */
+async function resolveTipoId(ctx: AuthContext, input: PropertyInput): Promise<string> {
+  if (!input.tipo_id?.trim()) throw new ApiError(400, 'el tipo de inmueble es obligatorio')
+
+  const { data } = await ctx.client
+    .from('tipos_inmueble')
+    .select('id, is_active')
+    .eq('id', input.tipo_id)
+    .maybeSingle()
+  const row = data as { id: string; is_active: boolean } | null
+  if (!row) throw new ApiError(400, 'tipo de inmueble inválido')
+  if (!row.is_active) throw new ApiError(400, 'el tipo de inmueble está desactivado')
+  return row.id
+}
+
+interface Territorio {
+  estadoId: string | null
+  municipioId: string | null
+  parroquiaId: string | null
+  parroquiaNombre: string | null
+}
+
+/**
+ * Deriva el territorio en el servidor (fuente de verdad):
+ * la parroquia define su municipio y el municipio define su estado.
+ * También deja el nombre oficial en `parroquia` (columna text de compatibilidad).
+ */
+async function resolveTerritorio(ctx: AuthContext, input: PropertyInput): Promise<Territorio> {
+  let estadoId = input.estado_id ?? null
+  let municipioId = input.municipio_id ?? null
+  const parroquiaId = input.parroquia_id ?? null
+  let parroquiaNombre = input.parroquia?.trim() || null
+
+  if (parroquiaId) {
+    const { data } = await ctx.client
+      .from('parroquias')
+      .select('id, nombre, municipio_id')
+      .eq('id', parroquiaId)
+      .maybeSingle()
+    const parroquia = data as { id: string; nombre: string; municipio_id: string } | null
+    if (!parroquia) throw new ApiError(400, 'parroquia inválida')
+    parroquiaNombre = parroquia.nombre
+    municipioId = parroquia.municipio_id
+  }
+
+  if (municipioId) {
+    const { data } = await ctx.client
+      .from('municipios')
+      .select('id, estado_id')
+      .eq('id', municipioId)
+      .maybeSingle()
+    const municipio = data as { id: string; estado_id: string } | null
+    if (!municipio) throw new ApiError(400, 'municipio inválido')
+    estadoId = municipio.estado_id
+  }
+
+  return { estadoId, municipioId, parroquiaId, parroquiaNombre }
 }
 
 /** Normaliza el precio a USD EN EL SERVIDOR (el cliente no puede falsificarlo). */
@@ -69,15 +139,40 @@ async function computePriceUsd(ctx: AuthContext, input: PropertyInput): Promise<
 }
 
 async function buildRow(ctx: AuthContext, input: PropertyInput) {
+  if (!input.titulo?.trim()) throw new ApiError(400, 'el título es obligatorio')
+  if (!input.price_is_ref) {
+    if (input.price_original == null || input.price_original <= 0) {
+      throw new ApiError(400, 'el monto debe ser mayor a 0')
+    }
+    if (input.price_currency !== 'usd' && input.price_currency !== 'bs') {
+      throw new ApiError(400, 'moneda inválida')
+    }
+  }
+  validateMetrics(input)
+
+  const tipoId = await resolveTipoId(ctx, input)
+  const territorio = await resolveTerritorio(ctx, input)
+  if (!territorio.parroquiaId && !territorio.parroquiaNombre) {
+    throw new ApiError(400, 'la parroquia es obligatoria')
+  }
+
   return {
     titulo: input.titulo.trim(),
-    tipo: input.tipo,
-    parroquia: input.parroquia.trim(),
+    tipo_id: tipoId,
+    estado_id: territorio.estadoId,
+    municipio_id: territorio.municipioId,
+    parroquia_id: territorio.parroquiaId,
+    parroquia: territorio.parroquiaNombre ?? '',
     description: input.description ?? '',
     price_is_ref: input.price_is_ref,
     price_currency: input.price_is_ref ? null : input.price_currency,
     price_original: input.price_is_ref ? null : input.price_original,
     price_usd: await computePriceUsd(ctx, input),
+    habitaciones: input.habitaciones ?? null,
+    banos: input.banos ?? null,
+    puestos_estacionamiento: input.puestos_estacionamiento ?? null,
+    metros_construccion: input.metros_construccion ?? null,
+    metros_terreno: input.metros_terreno ?? null,
   }
 }
 
@@ -99,7 +194,6 @@ async function getProperty(ctx: AuthContext, id: string) {
 
 async function createProperty(ctx: AuthContext, body: PropertyBody): Promise<Response> {
   if (!body.payload) throw new ApiError(400, 'faltan datos')
-  validateInput(body.payload)
   const row = await buildRow(ctx, body.payload)
 
   const { data, error } = await ctx.client
@@ -117,7 +211,6 @@ async function createProperty(ctx: AuthContext, body: PropertyBody): Promise<Res
 
 async function updateProperty(ctx: AuthContext, body: PropertyBody): Promise<Response> {
   if (!body.id || !body.payload) throw new ApiError(400, 'faltan datos')
-  validateInput(body.payload)
   const row = await buildRow(ctx, body.payload)
 
   const { error } = await ctx.client.from('propiedades').update(row).eq('id', body.id)

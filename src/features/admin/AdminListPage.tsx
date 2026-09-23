@@ -7,7 +7,9 @@ import { MIN_IMAGES_TO_ACTIVATE } from '../../lib/constants'
 import { coverImage } from '../../lib/images'
 import { formatPrice } from '../../lib/price'
 import { useSession } from '../../hooks/useSession'
-import { DEFAULT_FILTERS, type PropertyFilters } from '../../hooks/useProperties'
+import { DEFAULT_FILTERS, PROPERTY_SELECT, type PropertyFilters } from '../../hooks/useProperties'
+import { useTiposInmueble } from '../../hooks/useTiposInmueble'
+import { useTerritorio } from '../../hooks/useTerritorio'
 import { Filters } from '../../components/catalog/Filters'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -18,6 +20,8 @@ type EstadoFilter = 'all' | 'active' | 'inactive'
 
 export function AdminListPage() {
   const { profile } = useSession()
+  const { tipos } = useTiposInmueble()
+  const { estados } = useTerritorio()
   const [properties, setProperties] = useState<Property[]>([])
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_FILTERS)
@@ -35,7 +39,7 @@ export function AdminListPage() {
     setLoading(true)
     const { data, error } = await supabase
       .from('propiedades')
-      .select('*')
+      .select(PROPERTY_SELECT)
       .order('created_at', { ascending: false })
     if (!error) setProperties((data as Property[]) ?? [])
     setLoading(false)
@@ -75,13 +79,29 @@ export function AdminListPage() {
     const term = search.toLowerCase()
     const matchesSearch =
       p.titulo.toLowerCase().includes(term) || p.parroquia.toLowerCase().includes(term)
-    const matchesTipo = filters.tipo === 'all' || p.tipo === filters.tipo
-    const matchesParroquia = !filters.parroquia || p.parroquia === filters.parroquia
+    const matchesTipo = !filters.tipoId || p.tipo_id === filters.tipoId
+    const matchesUbicacion =
+      (!filters.estadoId || p.estado_id === filters.estadoId) &&
+      (!filters.municipioId || p.municipio_id === filters.municipioId) &&
+      (!filters.parroquiaId || p.parroquia_id === filters.parroquiaId)
     const matchesMin = filters.minPrice == null || (p.price_usd ?? -Infinity) >= filters.minPrice
     const matchesMax = filters.maxPrice == null || (p.price_usd ?? Infinity) <= filters.maxPrice
+    const matchesHabitaciones =
+      filters.minHabitaciones == null || (p.habitaciones ?? -Infinity) >= filters.minHabitaciones
+    const matchesBanos =
+      filters.minBanos == null || (p.banos ?? -Infinity) >= filters.minBanos
     const matchesEstado =
       estado === 'all' || (estado === 'active' ? p.is_active : !p.is_active)
-    return matchesSearch && matchesTipo && matchesParroquia && matchesMin && matchesMax && matchesEstado
+    return (
+      matchesSearch &&
+      matchesTipo &&
+      matchesUbicacion &&
+      matchesMin &&
+      matchesMax &&
+      matchesHabitaciones &&
+      matchesBanos &&
+      matchesEstado
+    )
   })
 
   const clearFilters = () => {
@@ -163,10 +183,10 @@ export function AdminListPage() {
       {rateMessage && <p className="text-small text-neutral-500">{rateMessage}</p>}
 
       <div className="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-        <Filters value={filters} onChange={setFilters}>
+        <Filters value={filters} onChange={setFilters} tipos={tipos} estados={estados}>
           <div className="flex flex-col gap-1">
             <label htmlFor="filter-estado" className="text-small font-medium text-neutral-900">
-              Estado
+              Publicación
             </label>
             <select
               id="filter-estado"
@@ -238,7 +258,7 @@ export function AdminListPage() {
                         <div>
                           <h3 className="text-h3 font-semibold text-neutral-900">{p.titulo}</h3>
                           <p className="text-small text-neutral-500">
-                            {p.parroquia} · {p.tipo}
+                            {p.parroquia} · {p.tipo?.nombre ?? ''}
                           </p>
                         </div>
                         <span className="text-body font-bold text-primary">{formatPrice(p)}</span>
@@ -289,7 +309,7 @@ export function AdminListPage() {
                       <div>
                         <h3 className="line-clamp-2 text-h3 font-semibold text-neutral-900">{p.titulo}</h3>
                         <p className="text-small text-neutral-500">
-                          {p.parroquia} · {p.tipo}
+                          {p.parroquia} · {p.tipo?.nombre ?? ''}
                         </p>
                       </div>
                       <span className="text-body font-bold text-primary">{formatPrice(p)}</span>

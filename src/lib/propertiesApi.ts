@@ -6,12 +6,19 @@ import type { PriceCurrency, PropertyImage } from '../types'
 
 export interface PropertyInput {
   titulo: string
-  tipo: string
-  parroquia: string
+  tipo_id: string
+  estado_id: string | null
+  municipio_id: string | null
+  parroquia_id: string | null
   description?: string
   price_is_ref: boolean
   price_currency: PriceCurrency | null
   price_original: number | null
+  habitaciones: number | null
+  banos: number | null
+  puestos_estacionamiento: number | null
+  metros_construccion: number | null
+  metros_terreno: number | null
 }
 
 interface InvokeResult<T> {

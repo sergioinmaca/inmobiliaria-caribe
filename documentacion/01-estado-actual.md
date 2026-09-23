@@ -191,3 +191,35 @@ Matices a documentar:
 | 7 | 🔵 | Precisión de `numeric` sin verificar (revisar). |
 
 El detalle, priorización e impacto están en [`05-deuda-tecnica-y-riesgos.md`](./05-deuda-tecnica-y-riesgos.md).
+
+---
+
+## 10. Actualización 2026-09-23 — Catálogo enriquecido
+
+Se aplicó la migración **`0005_catalogo_enriquecido.sql`**. Cambios respecto a la auditoría del
+22/09:
+
+**Tablas nuevas**
+
+| Tabla | Filas (seed) | Notas |
+|---|---|---|
+| `tipos_inmueble` | 6 | Administrable (Edge Function `catalogos`). |
+| `estados` | 3 | Distrito Capital, La Guaira, Miranda. Solo lectura. |
+| `municipios` | 23 | UNIQUE(estado_id, nombre). |
+| `parroquias` | 88 | UNIQUE(municipio_id, nombre). |
+
+**`public.propiedades` — columnas nuevas**
+
+`tipo_id`, `estado_id`, `municipio_id`, `parroquia_id` (FK), y `habitaciones`, `banos`,
+`puestos_estacionamiento`, `metros_construccion`, `metros_terreno` (con `CHECK >= 0`).
+
+- `tipo_id` quedó backfilled desde el `enum tipo`; la columna `tipo` pasa a **nullable**.
+- La columna text `parroquia` se conserva (el servidor escribe el nombre oficial).
+- Índices parciales nuevos: `propiedades_tipo_id_idx`, `propiedades_estado_id_idx`,
+  `propiedades_municipio_id_idx`, `propiedades_parroquia_id_idx` (todos `where is_active = true`).
+
+**Edge Functions:** nueva `catalogos`; `propiedades` extendida (valida tipo y coherencia
+territorial en servidor). Detalle en [`09-catalogo-enriquecido.md`](./09-catalogo-enriquecido.md).
+
+**Pendiente:** ejecutar `0006_drop_property_type_enum.sql` (elimina `tipo`, su índice y el enum
+`property_type`). Tras ello, la sección 1 de este documento (columna `tipo`) quedará obsoleta.

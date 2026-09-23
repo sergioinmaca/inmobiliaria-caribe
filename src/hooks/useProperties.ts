@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { ITEMS_PER_PAGE } from '../lib/constants'
-import type { Property, PropertyType } from '../types'
+import type { Property } from '../types'
 
 export interface PropertyFilters {
-  tipo: PropertyType | 'all'
-  parroquia: string
+  tipoId: string
+  estadoId: string
+  municipioId: string
+  parroquiaId: string
   minPrice: number | null
   maxPrice: number | null
+  minHabitaciones: number | null
+  minBanos: number | null
 }
 
 export const DEFAULT_FILTERS: PropertyFilters = {
-  tipo: 'all',
-  parroquia: '',
+  tipoId: '',
+  estadoId: '',
+  municipioId: '',
+  parroquiaId: '',
   minPrice: null,
   maxPrice: null,
+  minHabitaciones: null,
+  minBanos: null,
 }
+
+/** Columnas + relación del tipo para mostrar su nombre en las tarjetas. */
+export const PROPERTY_SELECT = '*, tipo:tipos_inmueble(nombre)'
 
 export function useProperties() {
   const [properties, setProperties] = useState<Property[]>([])
@@ -33,15 +44,19 @@ export function useProperties() {
 
     let query = supabase
       .from('propiedades')
-      .select('*', { count: 'exact' })
+      .select(PROPERTY_SELECT, { count: 'exact' })
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    if (filters.tipo !== 'all') query = query.eq('tipo', filters.tipo)
-    if (filters.parroquia) query = query.eq('parroquia', filters.parroquia)
+    if (filters.tipoId) query = query.eq('tipo_id', filters.tipoId)
+    if (filters.parroquiaId) query = query.eq('parroquia_id', filters.parroquiaId)
+    else if (filters.municipioId) query = query.eq('municipio_id', filters.municipioId)
+    else if (filters.estadoId) query = query.eq('estado_id', filters.estadoId)
     if (filters.minPrice != null) query = query.gte('price_usd', filters.minPrice)
     if (filters.maxPrice != null) query = query.lte('price_usd', filters.maxPrice)
+    if (filters.minHabitaciones != null) query = query.gte('habitaciones', filters.minHabitaciones)
+    if (filters.minBanos != null) query = query.gte('banos', filters.minBanos)
 
     const { data, count, error: err } = await query
 
@@ -59,5 +74,15 @@ export function useProperties() {
     fetchProperties()
   }, [fetchProperties])
 
-  return { properties, total, page, setPage, loading, error, filters, setFilters, refetch: fetchProperties }
+  return {
+    properties,
+    total,
+    page,
+    setPage,
+    loading,
+    error,
+    filters,
+    setFilters,
+    refetch: fetchProperties,
+  }
 }

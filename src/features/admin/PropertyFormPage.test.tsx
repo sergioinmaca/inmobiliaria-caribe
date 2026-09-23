@@ -26,6 +26,12 @@ vi.mock('../../lib/propertiesApi', () => ({
   setPropertyActive: vi.fn(),
   deleteProperty: vi.fn(),
 }))
+vi.mock('../../lib/catalogApi', () => ({
+  createTipo: vi.fn(),
+  updateTipo: vi.fn(),
+  setTipoActive: vi.fn(),
+  deleteTipo: vi.fn(),
+}))
 
 const mockedUseSession = vi.mocked(useSession)
 const mockedFrom = vi.mocked(supabase.from)
@@ -36,8 +42,16 @@ const mockedDeleteProperty = vi.mocked(deleteProperty)
 const property = {
   id: 'p1',
   titulo: 'Casa de prueba',
-  tipo: 'casa',
+  tipo_id: 't1',
+  estado_id: 'e1',
+  municipio_id: 'm1',
+  parroquia_id: 'p1p',
   parroquia: 'Chacao',
+  habitaciones: 3,
+  banos: 2,
+  puestos_estacionamiento: 1,
+  metros_construccion: 120,
+  metros_terreno: null,
   price_usd: null,
   price_original: null,
   price_currency: null,
@@ -48,19 +62,19 @@ const property = {
   images: [],
   created_at: '',
   updated_at: '',
+  tipo: { nombre: 'Casa' },
 }
 
 function queryBuilder(table: string) {
+  const isList = table === 'tipos_inmueble' || table === 'estados'
+  const data = isList ? [] : property
   const builder: Record<string, unknown> = {}
   builder.select = vi.fn(() => builder)
   builder.eq = vi.fn(() => builder)
-  builder.single = vi.fn(() =>
-    Promise.resolve(
-      table === 'settings'
-        ? { data: { key: 'usd_to_bs_rate', value: '0' }, error: null }
-        : { data: property, error: null },
-    ),
-  )
+  builder.order = vi.fn(() => builder)
+  builder.single = vi.fn(() => Promise.resolve({ data: isList ? null : property, error: null }))
+  builder.then = (resolve: (value: unknown) => unknown) =>
+    Promise.resolve({ data, error: null, count: isList ? 0 : 1 }).then(resolve)
   builder.update = vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: null })) }))
   builder.insert = vi.fn(() => Promise.resolve({ error: null }))
   return builder

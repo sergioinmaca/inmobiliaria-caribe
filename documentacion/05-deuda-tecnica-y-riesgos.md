@@ -88,3 +88,25 @@ Se corrigen con la migración `0004`.
 - El patrón de merge de imágenes (`mergeImages`) preserva el orden: correcto.
 - La separación "Drive guarda archivos, Supabase guarda URLs": correcta y económica.
 - La detección de desincronización bajo demanda (no global) evita *rate limits*: correcto.
+
+---
+
+## 5. Actualización 2026-09-23 — Catálogo enriquecido
+
+Cambios de estado de hallazgos a raíz de la migración `0005` y las Edge Functions nuevas
+(detalle en [`09-catalogo-enriquecido.md`](./09-catalogo-enriquecido.md)):
+
+| # | Hallazgo | Estado ahora |
+|---|---|---|
+| 5 | Sin índices del catálogo | ✅ resuelto (`0004` + índices `tipo_id`/territoriales en `0005`) |
+| 6 | Sin `CHECK` de precios/activación | ✅ precios y activación en `0004`; métricas en `0005` |
+| 7 | `updated_at` sin trigger | ✅ resuelto (`0004`; `tipos_inmueble` en `0005`) |
+| 10 | Tipos de DB duplicados a mano en TS | 🟠 mejorado: territory/tipos ahora se leen de la DB; quedan campos escalares de `Property` |
+| 11 | `.env.example` desactualizado | (sin cambios) |
+
+**Nuevos pendientes introducidos por el catálogo enriquecido:**
+
+- 🟡 Retirar el fallback de transición por `tipo` en `propiedades` tras ejecutar `0006`.
+- 🔵 Sin UI para reordenar `tipos_inmueble.orden`.
+- 🔵 Evaluar el retiro futuro de la columna text `parroquia`.
+- ⚠️ Ejecutar `0006_drop_property_type_enum.sql` (elimina `tipo`/`property_type`).

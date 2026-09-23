@@ -19,7 +19,7 @@ export function PropertyCard({ property }: { property: Property }) {
         <div>
           <h3 className="line-clamp-2 text-h3 font-semibold text-neutral-900">{property.titulo}</h3>
           <p className="text-small text-neutral-500">
-            {property.parroquia} · {property.tipo}
+            {property.parroquia} · {property.tipo?.nombre ?? ''}
           </p>
         </div>
         <span className="text-body font-bold text-primary">{formatPrice(property)}</span>

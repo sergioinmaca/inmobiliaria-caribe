@@ -7,8 +7,16 @@ import type { Property } from '../../types'
 const property: Property = {
   id: '1',
   titulo: 'Apartamento en La Florida',
-  tipo: 'apartamento',
+  tipo_id: 't1',
+  estado_id: 'e1',
+  municipio_id: 'm1',
+  parroquia_id: 'p1',
   parroquia: 'La Florida',
+  habitaciones: 3,
+  banos: 2,
+  puestos_estacionamiento: 1,
+  metros_construccion: 120,
+  metros_terreno: null,
   price_usd: 120000,
   price_original: 120000,
   price_currency: 'usd',
@@ -19,6 +27,7 @@ const property: Property = {
   images: [],
   created_at: '',
   updated_at: '',
+  tipo: { nombre: 'Apartamento' },
 }
 
 describe('PropertyCard', () => {
@@ -29,7 +38,7 @@ describe('PropertyCard', () => {
       </MemoryRouter>,
     )
     expect(screen.getByText('Apartamento en La Florida')).toBeInTheDocument()
-    expect(screen.getByText('La Florida · apartamento')).toBeInTheDocument()
+    expect(screen.getByText('La Florida · Apartamento')).toBeInTheDocument()
     expect(screen.getByText('$120.000')).toBeInTheDocument()
   })
 

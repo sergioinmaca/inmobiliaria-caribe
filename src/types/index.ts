@@ -1,5 +1,4 @@
 export type Role = 'master' | 'gerente' | 'supervisor' | 'invitado'
-export type PropertyType = 'apartamento' | 'casa' | 'local'
 export type PriceCurrency = 'usd' | 'bs'
 
 export interface PropertyImage {
@@ -9,11 +8,48 @@ export interface PropertyImage {
   order: number
 }
 
+export interface TipoInmueble {
+  id: string
+  nombre: string
+  orden: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Parroquia {
+  id: string
+  municipio_id: string
+  nombre: string
+}
+
+export interface Municipio {
+  id: string
+  estado_id: string
+  nombre: string
+  parroquias: Parroquia[]
+}
+
+export interface Estado {
+  id: string
+  nombre: string
+  municipios: Municipio[]
+}
+
 export interface Property {
   id: string
   titulo: string
-  tipo: PropertyType
+  tipo_id: string | null
+  estado_id: string | null
+  municipio_id: string | null
+  parroquia_id: string | null
+  /** Nombre de la parroquia (columna text conservada por compatibilidad). */
   parroquia: string
+  habitaciones: number | null
+  banos: number | null
+  puestos_estacionamiento: number | null
+  metros_construccion: number | null
+  metros_terreno: number | null
   price_usd: number | null
   price_original: number | null
   price_currency: PriceCurrency | null
@@ -24,6 +60,12 @@ export interface Property {
   images: PropertyImage[]
   created_at: string
   updated_at: string
+  /** Relación embebida del tipo (PostgREST). */
+  tipo?: { nombre: string } | null
+  /** Campos territoriales embebidos (solo lectura del catálogo). */
+  estado?: { nombre: string } | null
+  municipio?: { nombre: string } | null
+  parroquia_ref?: { nombre: string } | null
 }
 
 export interface Profile {

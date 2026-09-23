@@ -15,8 +15,16 @@ const mockedFrom = vi.mocked(supabase.from)
 const inactiveProperty = {
   id: '1',
   titulo: 'Apto La Florida',
-  tipo: 'apartamento',
+  tipo_id: 't1',
+  estado_id: 'e1',
+  municipio_id: 'm1',
+  parroquia_id: 'p1',
   parroquia: 'La Florida',
+  habitaciones: 3,
+  banos: 2,
+  puestos_estacionamiento: 1,
+  metros_construccion: 120,
+  metros_terreno: null,
   price_usd: null,
   price_original: null,
   price_currency: null,
@@ -27,6 +35,17 @@ const inactiveProperty = {
   images: [],
   created_at: '',
   updated_at: '',
+  tipo: { nombre: 'Apartamento' },
+}
+
+function chain(result: unknown) {
+  const builder: Record<string, unknown> = {}
+  builder.select = vi.fn(() => builder)
+  builder.eq = vi.fn(() => builder)
+  builder.order = vi.fn(() => builder)
+  builder.single = vi.fn(() => Promise.resolve(result))
+  builder.then = (resolve: (value: unknown) => unknown) => Promise.resolve(result).then(resolve)
+  return builder
 }
 
 describe('AdminListPage', () => {
@@ -52,22 +71,10 @@ describe('AdminListPage', () => {
   it('bloquea activar sin imágenes y muestra el error', async () => {
     const user = userEvent.setup()
     mockedFrom.mockImplementation(((table: string) => {
-      if (table === 'settings') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi
-                .fn()
-                .mockResolvedValue({ data: { key: 'usd_to_bs_rate', value: '50' }, error: null }),
-            }),
-          }),
-        }
-      }
-      return {
-        select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [inactiveProperty], error: null }),
-        }),
-      }
+      if (table === 'settings') return chain({ data: { key: 'usd_to_bs_rate', value: '50' }, error: null })
+      if (table === 'tipos_inmueble') return chain({ data: [], error: null })
+      if (table === 'estados') return chain({ data: [], error: null })
+      return chain({ data: [inactiveProperty], error: null, count: 1 })
     }) as never)
 
     render(

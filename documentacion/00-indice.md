@@ -25,6 +25,7 @@ implementación. Se escribió tras una auditoría del esquema productivo (intros
 | [`06-hoja-de-ruta.md`](./06-hoja-de-ruta.md) | Plan de implementación con responsabilidades (quién hace qué). |
 | [`07-informe-implementacion.md`](./07-informe-implementacion.md) | Informe de los cambios de código ya realizados. |
 | [`08-pasos-del-usuario.md`](./08-pasos-del-usuario.md) | Guía paso a paso para desplegar (tareas del usuario). |
+| [`09-catalogo-enriquecido.md`](./09-catalogo-enriquecido.md) | Tipos administrables, división territorial y métricas (2026-09-23). |
 | [`sql/introspect.sql`](./sql/introspect.sql) | Script reutilizable para volver a auditar el esquema. |
 
 ## Convenciones

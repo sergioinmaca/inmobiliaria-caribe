@@ -150,6 +150,27 @@ fotos tarda notablemente menos; activar hace **una** llamada al script.
 
 ---
 
+## Fase 9 — Catálogo enriquecido ✅ (desplegado; falta `0006`)
+
+Fecha: 2026-09-23. Detalle en [`09-catalogo-enriquecido.md`](./09-catalogo-enriquecido.md).
+
+| Orden | Quién | Tarea | Estado |
+|---|---|---|---|
+| 9.1 | [YO] | Migración `0005_catalogo_enriquecido.sql` (tipos, territorio, métricas) | ✅ |
+| 9.2 | [YO] | Edge Function `catalogos` + extensión de `propiedades` | ✅ |
+| 9.3 | [YO] | Frontend: hooks, formulario, filtros, detalle, modal de tipos | ✅ |
+| 9.4 | [TÚ] | Ejecutar `0005` en SQL Editor | ✅ |
+| 9.5 | [YO/TÚ] | Desplegar `catalogos` y `propiedades` (`--use-api`) | ✅ v1 / v4 |
+| 9.6 | [YO/TÚ] | Desplegar frontend (Firebase Hosting) | ✅ |
+| 9.7 | [AMBOS] | Prueba E2E | ✅ |
+| 9.8 | [TÚ] | Ejecutar `0006_drop_property_type_enum.sql` | ✅ |
+| 9.9 | [YO] | Retirar fallback de transición por `tipo` + redeploy de `propiedades` | ✅ |
+
+**Criterio de salida:** tipos administrables desde el modal `+`, territorio en cascada,
+métricas visibles en catálogo/detalle y `tipo`/`property_type` eliminados de la DB.
+
+---
+
 ## Resumen de orden de ejecución
 
 ```

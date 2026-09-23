@@ -2,15 +2,19 @@ import { Filters } from '../../components/catalog/Filters'
 import { Pagination } from '../../components/catalog/Pagination'
 import { PropertyCard } from '../../components/catalog/PropertyCard'
 import { useProperties, DEFAULT_FILTERS } from '../../hooks/useProperties'
+import { useTiposInmueble } from '../../hooks/useTiposInmueble'
+import { useTerritorio } from '../../hooks/useTerritorio'
 import { ITEMS_PER_PAGE } from '../../lib/constants'
 
 export function CatalogPage() {
   const { properties, total, page, setPage, loading, error, filters, setFilters, refetch } =
     useProperties()
+  const { tipos } = useTiposInmueble()
+  const { estados } = useTerritorio()
 
   return (
     <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-      <Filters value={filters} onChange={setFilters} />
+      <Filters value={filters} onChange={setFilters} tipos={tipos} estados={estados} />
 
       <div className="flex flex-col gap-6">
         {loading ? (
