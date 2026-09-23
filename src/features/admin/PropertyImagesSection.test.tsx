@@ -148,7 +148,7 @@ describe('PropertyImagesSection', () => {
     await user.upload(screen.getByLabelText('Agregar fotos'), files)
 
     expect(await screen.findByText('Se subieron 2 fotos.')).toBeInTheDocument()
-    expect(props.onChange).toHaveBeenCalledTimes(2)
+    expect(props.onChange).toHaveBeenCalledTimes(1)
   })
 
   it('muestra el progreso del lote al subir', async () => {

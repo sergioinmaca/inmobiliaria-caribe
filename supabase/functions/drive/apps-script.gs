@@ -3,7 +3,9 @@
 // CÓMO DESPLEGAR (una sola vez, en tu cuenta Google, sin Google Cloud ni tarjeta):
 //   1. Ir a https://script.google.com → Nuevo proyecto
 //   2. Borrar el código de ejemplo y pegar TODO este archivo
-//   3. En la línea `SCRIPT_SECRET`, cambiar "CAMBIA_ESTE_SECRETO" por un valor aleatorio largo
+//   3. Configurar el secreto (recomendado, ya NO en el código):
+//        - Proyecto → Configuración del proyecto → Propiedades de la secuencia de comandos
+//        - Añadir propiedad:  SCRIPT_SECRET = <valor aleatorio largo>
 //   4. Guardar (Ctrl+S) con nombre "inmobiliaria-caribe-drive"
 //   5. Implementar → Nueva implementación → Tipo: "Aplicación web"
 //        - Ejecutar como: "Yo"
@@ -14,8 +16,14 @@
 //   APPS_SCRIPT_URL    = la URL copiada
 //   APPS_SCRIPT_SECRET = el MISMO valor que pusiste en SCRIPT_SECRET
 
-const SCRIPT_SECRET = 'CAMBIA_ESTE_SECRETO';
+// Respaldo por compatibilidad. Preferir la propiedad SCRIPT_SECRET.
+const SCRIPT_SECRET_FALLBACK = 'CAMBIA_ESTE_SECRETO';
 const ROOT_FOLDER = 'catalogo_inmuebles';
+
+function getSecret() {
+  var fromProps = PropertiesService.getScriptProperties().getProperty('SCRIPT_SECRET');
+  return fromProps || SCRIPT_SECRET_FALLBACK;
+}
 
 function doPost(e) {
   const out = ContentService.createTextOutput();
@@ -24,7 +32,7 @@ function doPost(e) {
   let result;
   try {
     const body = JSON.parse(e.postData.contents || '{}');
-    if (body.secret !== SCRIPT_SECRET) {
+    if (body.secret !== getSecret()) {
       result = { error: 'no autorizado' };
     } else {
       switch (body.action) {
@@ -39,6 +47,9 @@ function doPost(e) {
           break;
         case 'setVisibility':
           result = setVisibility(body.folderId, Boolean(body.isActive));
+          break;
+        case 'setFilesVisibility':
+          result = setFilesVisibility(body.fileIds, Boolean(body.isActive));
           break;
         case 'upload':
           result = uploadFile(body.folderId, body.name, body.mimeType, body.data, body.uploadKey, Boolean(body.isActive));
@@ -132,10 +143,12 @@ function createFolder(rawName, folderKey) {
   return { folderId: folder.getId(), folderName: folder.getName() };
 }
 
+// IMPORTANTE: filtra los archivos en la papelera. Sin esto, una foto eliminada
+// seguiría apareciendo en `list` y provocaría un falso "desincronizado".
 function getFiles(folderId) {
   const folder = DriveApp.getFolderById(folderId);
   const files = [];
-  const it = folder.getFiles();
+  const it = folder.searchFiles('trashed = false');
   while (it.hasNext()) {
     const f = it.next();
     files.push({ id: f.getId(), name: f.getName() });
@@ -150,7 +163,7 @@ function listFolder(folderId) {
 function applyVisibility(folderId, isActive) {
   const folder = DriveApp.getFolderById(folderId);
   const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
-  const it = folder.getFiles();
+  const it = folder.searchFiles('trashed = false');
   while (it.hasNext()) {
     it.next().setSharing(access, DriveApp.Permission.VIEW);
   }
@@ -179,12 +192,24 @@ function setFileVisibility(fileId, isActive) {
   return { ok: true };
 }
 
+// Visibilidad en lote: una sola llamada desde la Edge Function para todos los archivos.
+function setFilesVisibility(fileIds, isActive) {
+  const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
+  const ids = fileIds || [];
+  for (var i = 0; i < ids.length; i++) {
+    try {
+      DriveApp.getFileById(ids[i]).setSharing(access, DriveApp.Permission.VIEW);
+    } catch (e) {}
+  }
+  return { ok: true };
+}
+
 function uploadFile(folderId, name, mimeType, data, uploadKey, isActive) {
   const folder = DriveApp.getFolderById(folderId);
   const access = isActive ? DriveApp.Access.ANYONE_WITH_LINK : DriveApp.Access.PRIVATE;
 
   if (uploadKey) {
-    const it = folder.getFiles();
+    const it = folder.searchFiles('trashed = false');
     while (it.hasNext()) {
       const f = it.next();
       if (f.getDescription() === uploadKey) {
@@ -212,7 +237,7 @@ function uploadFile(folderId, name, mimeType, data, uploadKey, isActive) {
 
 function deleteFile(folderId, fileId) {
   const folder = DriveApp.getFolderById(folderId);
-  const it = folder.getFiles();
+  const it = folder.searchFiles('trashed = false');
   while (it.hasNext()) {
     const f = it.next();
     if (f.getId() === fileId) {
@@ -230,7 +255,7 @@ function deleteFileById(fileId) {
 
 function deleteFolder(folderId) {
   const folder = DriveApp.getFolderById(folderId);
-  const it = folder.getFiles();
+  const it = folder.searchFiles('trashed = false');
   while (it.hasNext()) {
     it.next().setTrashed(true);
   }

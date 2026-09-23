@@ -6,7 +6,13 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { supabase } from '../../lib/supabase'
 import { createDriveFolder, deletePropertyFiles } from '../../lib/drive'
-import { normalizePriceUsd } from '../../lib/price'
+import {
+  createProperty,
+  deleteProperty,
+  updateProperty,
+  updatePropertyImages,
+  type PropertyInput,
+} from '../../lib/propertiesApi'
 import { PROPERTY_TYPES, PARROQUIAS } from '../../lib/constants'
 import { PropertyImagesSection } from './PropertyImagesSection'
 import { useSession } from '../../hooks/useSession'
@@ -27,7 +33,6 @@ export function PropertyFormPage() {
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const { profile } = useSession()
-  const [rate, setRate] = useState(0)
   const [images, setImages] = useState<PropertyImage[]>([])
   const [driveFolderId, setDriveFolderId] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -84,22 +89,11 @@ export function PropertyFormPage() {
     async (next: PropertyImage[]) => {
       setImages(next)
       if (isEdit && id) {
-        await supabase.from('propiedades').update({ images: next }).eq('id', id)
+        await updatePropertyImages(id, next)
       }
     },
     [isEdit, id],
   )
-
-  useEffect(() => {
-    supabase
-      .from('settings')
-      .select('*')
-      .eq('key', 'usd_to_bs_rate')
-      .single()
-      .then(({ data }) => {
-        if (data) setRate(Number((data as { value: string }).value) || 0)
-      })
-  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -135,7 +129,7 @@ export function PropertyFormPage() {
     const currency = values.priceMode === 'ref' ? null : values.priceMode
     const isRef = currency === null
     const amount = isRef ? null : values.priceAmount
-    const payload = {
+    const input: PropertyInput = {
       titulo: values.titulo,
       tipo: values.tipo,
       parroquia: values.parroquia,
@@ -143,13 +137,12 @@ export function PropertyFormPage() {
       price_is_ref: isRef,
       price_currency: currency,
       price_original: amount,
-      price_usd: normalizePriceUsd(currency, amount, isRef, rate),
     }
 
     if (isEdit && id) {
-      const { error } = await supabase.from('propiedades').update(payload).eq('id', id)
+      const { error } = await updateProperty(id, input)
       if (error) {
-        setSubmitError('Error al guardar los cambios.')
+        setSubmitError(error)
         return
       }
       navigate('/admin')
@@ -162,11 +155,9 @@ export function PropertyFormPage() {
       return
     }
 
-    const { error } = await supabase
-      .from('propiedades')
-      .insert({ ...payload, drive_folder_id: folderId, images })
+    const { error } = await createProperty(input, images, folderId)
     if (error) {
-      setSubmitError('Error al crear el inmueble.')
+      setSubmitError(error)
       return
     }
     navigate('/admin')
@@ -185,10 +176,10 @@ export function PropertyFormPage() {
     setDeleting(true)
     const fileIds = images.map((img) => img.id)
     const folderId = driveFolderId
-    const { error } = await supabase.from('propiedades').delete().eq('id', id)
+    const { error } = await deleteProperty(id)
     if (error) {
       setDeleting(false)
-      setDeleteError('No se pudo eliminar el inmueble.')
+      setDeleteError(error)
       return
     }
     await deletePropertyFiles({ fileIds, folderId })

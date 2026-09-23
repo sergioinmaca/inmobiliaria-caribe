@@ -1,12 +1,32 @@
 // src/features/admin/PropertyImagesSection.tsx
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../hooks/useSession'
-import { uploadDriveFile, deleteDriveFile, listDriveFiles, syncDriveFolder } from '../../lib/drive'
+import {
+  uploadDriveFile,
+  deleteDriveFile,
+  listDriveFiles,
+  syncDriveFolder,
+  type UploadedDriveFile,
+} from '../../lib/drive'
 import { resizeImage } from '../../lib/imageResize'
 import { sortImages, moveImage, removeImage } from '../../lib/images'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import type { PropertyImage } from '../../types'
+
+const DESYNC_TTL_MS = 60_000
+const UPLOAD_CONCURRENCY = 3
+
+/** Ejecuta `fn` sobre cada item con un límite de concurrencia. */
+async function mapLimit<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+  const pool = new Set<Promise<void>>()
+  for (const item of items) {
+    const task = fn(item).finally(() => pool.delete(task))
+    pool.add(task)
+    if (pool.size >= limit) await Promise.race(pool)
+  }
+  await Promise.all(pool)
+}
 
 interface PropertyImagesSectionProps {
   images: PropertyImage[]
@@ -28,10 +48,11 @@ export function PropertyImagesSection({
   const { profile } = useSession()
   const [desynced, setDesynced] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [progress, setProgress] = useState<{ current: number; total: number; name: string } | null>(null)
+  const [progress, setProgress] = useState<{ done: number; total: number; name: string } | null>(null)
   const [summary, setSummary] = useState<{ text: string; ok: boolean } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const imagesRef = useRef(images)
+  const lastCheck = useRef<{ folderId: string; at: number }>({ folderId: '', at: 0 })
 
   const canManage = profile?.role === 'gerente' || profile?.role === 'master'
 
@@ -41,9 +62,15 @@ export function PropertyImagesSection({
 
   useEffect(() => {
     if (!canManage || !driveFolderId || !propertyId) return
+    const fresh =
+      lastCheck.current.folderId === driveFolderId &&
+      Date.now() - lastCheck.current.at < DESYNC_TTL_MS
+    if (fresh) return
+
     let active = true
     listDriveFiles(driveFolderId).then((files) => {
       if (!active) return
+      lastCheck.current = { folderId: driveFolderId, at: Date.now() }
       const storedIds = new Set(images.map((img) => img.id))
       const driveIds = new Set(files.map((f) => f.id))
       const same =
@@ -65,40 +92,53 @@ export function PropertyImagesSection({
         return
       }
     }
+    const targetFolder = folderId
     const fileList = Array.from(files)
-    let successCount = 0
-    let failedCount = 0
     setMessage(null)
     setSummary(null)
-    setProgress({ current: 0, total: fileList.length, name: '' })
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i]
-      setProgress({ current: i + 1, total: fileList.length, name: file.name })
-      try {
-        const resized = await resizeImage(file)
-        const uploadKey = `${file.name}:${file.size}:${file.lastModified}`
-        const uploaded = await uploadDriveFile({
-          folderId,
-          name: resized.name,
-          mimeType: resized.mimeType,
-          data: resized.base64,
-          isActive: true,
-          uploadKey,
-        })
-        if (!uploaded) throw new Error('sin respuesta')
-        if (!imagesRef.current.some((img) => img.id === uploaded.id)) {
-          const next = [
-            ...imagesRef.current,
-            { id: uploaded.id, url: uploaded.url, name: uploaded.name, order: imagesRef.current.length },
-          ]
-          onChange(next)
+    setProgress({ done: 0, total: fileList.length, name: '' })
+
+    const uploaded: (UploadedDriveFile | null)[] = new Array(fileList.length).fill(null)
+    let successCount = 0
+    let failedCount = 0
+
+    await mapLimit(
+      fileList.map((file, index) => ({ file, index })),
+      UPLOAD_CONCURRENCY,
+      async ({ file, index }) => {
+        try {
+          const resized = await resizeImage(file)
+          const uploadKey = `${file.name}:${file.size}:${file.lastModified}`
+          const result = await uploadDriveFile({
+            folderId: targetFolder,
+            name: resized.name,
+            mimeType: resized.mimeType,
+            data: resized.base64,
+            isActive: true,
+            uploadKey,
+          })
+          if (!result) throw new Error('sin respuesta')
+          uploaded[index] = result
+          successCount++
+        } catch {
+          failedCount++
+        } finally {
+          const done = successCount + failedCount
+          setProgress((prev) => (prev ? { done, total: fileList.length, name: file.name } : prev))
         }
-        successCount++
-      } catch {
-        failedCount++
-      }
-    }
+      },
+    )
+
     setProgress(null)
+
+    const existingIds = new Set(imagesRef.current.map((img) => img.id))
+    const baseOrder = imagesRef.current.length
+    const additions = uploaded
+      .filter((item): item is UploadedDriveFile => item != null)
+      .filter((item) => !existingIds.has(item.id))
+      .map((item, i) => ({ id: item.id, name: item.name, url: item.url, order: baseOrder + i }))
+    if (additions.length > 0) onChange([...imagesRef.current, ...additions])
+
     if (successCount > 0 || failedCount > 0) {
       const ok = failedCount === 0
       const subidas = `Se subieron ${successCount} foto${successCount === 1 ? '' : 's'}`
@@ -133,6 +173,7 @@ export function PropertyImagesSection({
     setSyncing(false)
     if (ok) {
       setDesynced(false)
+      lastCheck.current = { folderId: driveFolderId, at: Date.now() }
       onSynced?.()
     } else {
       setMessage('No se pudo sincronizar.')
@@ -174,7 +215,7 @@ export function PropertyImagesSection({
 
       {progress && (
         <p className="text-small text-neutral-500">
-          Subiendo {progress.current} de {progress.total}
+          Subiendo {progress.done} de {progress.total}
           {progress.name ? ` — ${progress.name}` : ''}…
         </p>
       )}

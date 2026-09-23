@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { setDriveVisibility } from '../../lib/drive'
+import { setPropertyActive } from '../../lib/propertiesApi'
 import { MIN_IMAGES_TO_ACTIVATE } from '../../lib/constants'
 import { coverImage } from '../../lib/images'
 import { formatPrice } from '../../lib/price'
@@ -28,7 +29,7 @@ export function AdminListPage() {
 
   const canEdit = ['master', 'gerente', 'supervisor'].includes(profile?.role ?? '')
   const canCreate = ['master', 'gerente'].includes(profile?.role ?? '')
-  const canManageRate = ['master', 'gerente'].includes(profile?.role ?? '')
+  const canManageRate = profile?.role === 'master'
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -105,12 +106,9 @@ export function AdminListPage() {
       return
     }
 
-    const { error } = await supabase
-      .from('propiedades')
-      .update({ is_active: !property.is_active })
-      .eq('id', property.id)
+    const { error } = await setPropertyActive(property.id, !property.is_active)
     if (error) {
-      setMessage('Error al actualizar el estado.')
+      setMessage(error)
       return
     }
     setMessage(null)

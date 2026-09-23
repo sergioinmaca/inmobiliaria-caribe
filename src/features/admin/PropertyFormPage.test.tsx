@@ -6,6 +6,7 @@ import { PropertyFormPage } from './PropertyFormPage'
 import { useSession } from '../../hooks/useSession'
 import { supabase } from '../../lib/supabase'
 import { deletePropertyFiles, listDriveFiles } from '../../lib/drive'
+import { deleteProperty } from '../../lib/propertiesApi'
 
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }))
 vi.mock('../../lib/supabase', () => ({ supabase: { from: vi.fn() } }))
@@ -18,11 +19,19 @@ vi.mock('../../lib/drive', () => ({
   deleteDriveFile: vi.fn(),
   syncDriveFolder: vi.fn(),
 }))
+vi.mock('../../lib/propertiesApi', () => ({
+  createProperty: vi.fn(),
+  updateProperty: vi.fn(),
+  updatePropertyImages: vi.fn(),
+  setPropertyActive: vi.fn(),
+  deleteProperty: vi.fn(),
+}))
 
 const mockedUseSession = vi.mocked(useSession)
 const mockedFrom = vi.mocked(supabase.from)
 const mockedDeletePropertyFiles = vi.mocked(deletePropertyFiles)
 const mockedListDriveFiles = vi.mocked(listDriveFiles)
+const mockedDeleteProperty = vi.mocked(deleteProperty)
 
 const property = {
   id: 'p1',
@@ -41,8 +50,6 @@ const property = {
   updated_at: '',
 }
 
-const deleteEq = vi.fn(() => Promise.resolve({ error: null }))
-
 function queryBuilder(table: string) {
   const builder: Record<string, unknown> = {}
   builder.select = vi.fn(() => builder)
@@ -56,7 +63,6 @@ function queryBuilder(table: string) {
   )
   builder.update = vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: null })) }))
   builder.insert = vi.fn(() => Promise.resolve({ error: null }))
-  builder.delete = vi.fn(() => ({ eq: deleteEq }))
   return builder
 }
 
@@ -77,7 +83,7 @@ describe('PropertyFormPage — eliminar inmueble', () => {
     mockedDeletePropertyFiles.mockReset()
     mockedListDriveFiles.mockReset()
     mockedListDriveFiles.mockResolvedValue([])
-    deleteEq.mockClear()
+    mockedDeleteProperty.mockReset()
     mockedFrom.mockImplementation(((table: string) => queryBuilder(table)) as never)
     mockedUseSession.mockReturnValue({
       profile: {
@@ -98,6 +104,7 @@ describe('PropertyFormPage — eliminar inmueble', () => {
 
   it('borra la fila, las fotos de Drive y navega al listado', async () => {
     const user = userEvent.setup()
+    mockedDeleteProperty.mockResolvedValue({ data: { ok: true }, error: null })
     mockedDeletePropertyFiles.mockResolvedValue(true)
     vi.spyOn(window, 'confirm').mockReturnValue(true)
 
@@ -106,7 +113,7 @@ describe('PropertyFormPage — eliminar inmueble', () => {
     await screen.findByRole('button', { name: 'Eliminar inmueble' })
     await user.click(screen.getByRole('button', { name: 'Eliminar inmueble' }))
 
-    expect(deleteEq).toHaveBeenCalledWith('id', 'p1')
+    expect(mockedDeleteProperty).toHaveBeenCalledWith('p1')
     expect(mockedDeletePropertyFiles).toHaveBeenCalledWith({ fileIds: [], folderId: 'folder-1' })
     expect(await screen.findByText('Listado admin')).toBeInTheDocument()
   })
@@ -121,7 +128,7 @@ describe('PropertyFormPage — eliminar inmueble', () => {
     await user.click(await screen.findByRole('button', { name: 'Eliminar inmueble' }))
 
     expect(mockedDeletePropertyFiles).not.toHaveBeenCalled()
-    expect(deleteEq).not.toHaveBeenCalled()
+    expect(mockedDeleteProperty).not.toHaveBeenCalled()
   })
 
   it('oculta el botón para el supervisor', async () => {
