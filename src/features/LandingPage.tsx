@@ -1,17 +1,28 @@
 import { Link } from 'react-router-dom'
+import { AdsCarousel } from '../components/ads/AdsCarousel'
+import { useAds } from '../hooks/useAds'
 
 export function LandingPage() {
+  const { ads, loading } = useAds()
+
   return (
     <div className="flex flex-col gap-4">
       <section className="relative left-1/2 -mt-6 w-screen -translate-x-1/2">
-        <picture>
-          <source media="(min-width: 1024px)" srcSet="/brand/banner-placeholder.svg" />
+        {loading ? (
+          <div
+            role="status"
+            aria-label="Cargando publicidad"
+            className="aspect-[2.5/1] w-full animate-pulse bg-neutral-200 lg:aspect-[4/1]"
+          />
+        ) : ads.length > 0 ? (
+          <AdsCarousel ads={ads} />
+        ) : (
           <img
             src="/brand/banner_landing.png"
             alt="Inmobiliaria Municipal Caribe"
             className="w-full object-cover lg:max-h-[420px]"
           />
-        </picture>
+        )}
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">

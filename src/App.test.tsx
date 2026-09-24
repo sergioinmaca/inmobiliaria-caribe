@@ -14,6 +14,10 @@ vi.mock('./lib/supabase', () => ({
   },
 }))
 
+vi.mock('./hooks/useAds', () => ({
+  useAds: () => ({ ads: [], loading: false, error: null, refetch: vi.fn() }),
+}))
+
 describe('App', () => {
   it('renderiza el header y la landing', async () => {
     render(
