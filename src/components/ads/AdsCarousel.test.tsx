@@ -60,11 +60,11 @@ describe('AdsCarousel', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  it('con un solo anuncio no muestra controles', () => {
+  it('con un solo anuncio muestra flechas y un dot', () => {
     render(<AdsCarousel ads={[makeAd()]} />)
-    expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Anterior' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Ir al anuncio 1' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir al anuncio 1' })).toBeInTheDocument()
   })
 
   it('muestra un dot por anuncio', () => {

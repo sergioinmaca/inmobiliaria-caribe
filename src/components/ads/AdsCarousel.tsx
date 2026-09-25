@@ -72,7 +72,7 @@ export function AdsCarousel({ ads }: { ads: Ad[] }) {
         <AdImage ad={current} />
       </div>
 
-      {count > 1 && (
+      {count >= 1 && (
         <>
           <button
             type="button"
