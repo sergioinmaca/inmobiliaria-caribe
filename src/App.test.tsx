@@ -18,6 +18,10 @@ vi.mock('./hooks/useAds', () => ({
   useAds: () => ({ ads: [], loading: false, error: null, refetch: vi.fn() }),
 }))
 
+vi.mock('./hooks/useTiposInmueble', () => ({
+  useTiposInmueble: () => ({ tipos: [], loading: false, refetch: vi.fn() }),
+}))
+
 describe('App', () => {
   it('renderiza el header y la landing', async () => {
     render(

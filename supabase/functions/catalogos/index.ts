@@ -2,8 +2,8 @@
 // Despliegue: supabase functions deploy catalogos --use-api
 // Roles: gerente, master.
 // Acciones:
-//   { action: 'create', nombre, orden? }
-//   { action: 'update', id, nombre?, orden? }
+//   { action: 'create', nombre, icono?, orden? }
+//   { action: 'update', id, nombre?, icono?, orden? }
 //   { action: 'setActive', id, isActive }
 //   { action: 'delete', id }
 //
@@ -19,6 +19,7 @@ interface CatalogBody {
   action: string
   id?: string
   nombre?: string
+  icono?: string
   orden?: number
   isActive?: boolean
 }
@@ -28,7 +29,7 @@ async function createTipo(ctx: AuthContext, body: CatalogBody): Promise<Response
   const nombre = body.nombre!.trim()
   const { data, error } = await ctx.client
     .from('tipos_inmueble')
-    .insert({ nombre, orden: body.orden ?? 0 })
+    .insert({ nombre, icono: body.icono?.trim() || null, orden: body.orden ?? 0 })
     .select('id')
     .single()
   if (error) {
@@ -47,6 +48,7 @@ async function updateTipo(ctx: AuthContext, body: CatalogBody): Promise<Response
     if (!nombre) throw new ApiError(400, 'el nombre es obligatorio')
     patch.nombre = nombre
   }
+  if (body.icono !== undefined) patch.icono = body.icono.trim() || null
   if (body.orden !== undefined) patch.orden = body.orden
 
   if (Object.keys(patch).length === 0) throw new ApiError(400, 'nada que actualizar')

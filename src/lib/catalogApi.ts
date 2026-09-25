@@ -27,11 +27,11 @@ async function invoke<T>(body: Record<string, unknown>): Promise<InvokeResult<T>
   return { data: (data as T) ?? null, error: null }
 }
 
-export function createTipo(nombre: string, orden?: number) {
-  return invoke<{ ok: boolean; id: string }>({ action: 'create', nombre, orden })
+export function createTipo(nombre: string, icono?: string, orden?: number) {
+  return invoke<{ ok: boolean; id: string }>({ action: 'create', nombre, icono, orden })
 }
 
-export function updateTipo(id: string, patch: { nombre?: string; orden?: number }) {
+export function updateTipo(id: string, patch: { nombre?: string; icono?: string; orden?: number }) {
   return invoke<{ ok: boolean }>({ action: 'update', id, ...patch })
 }
 

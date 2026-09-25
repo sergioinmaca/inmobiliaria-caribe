@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { supabase } from '../../lib/supabase'
 import { createTipo, deleteTipo, setTipoActive, updateTipo } from '../../lib/catalogApi'
+import { DEFAULT_TIPO_ICON, TIPO_ICONS } from '../../lib/tipoIconos'
 
 interface TypeManagerModalProps {
   open: boolean
@@ -9,11 +10,15 @@ interface TypeManagerModalProps {
 }
 
 export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
-  const [tipos, setTipos] = useState<{ id: string; nombre: string; orden: number; is_active: boolean }[]>([])
+  const [tipos, setTipos] = useState<
+    { id: string; nombre: string; icono: string | null; orden: number; is_active: boolean }[]
+  >([])
   const [loading, setLoading] = useState(true)
   const [nombre, setNombre] = useState('')
+  const [icono, setIcono] = useState(DEFAULT_TIPO_ICON)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [editIcono, setEditIcono] = useState(DEFAULT_TIPO_ICON)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -23,7 +28,9 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
       .select('*')
       .order('orden', { ascending: true })
       .order('nombre', { ascending: true })
-    setTipos((data as { id: string; nombre: string; orden: number; is_active: boolean }[]) ?? [])
+    setTipos(
+      (data as { id: string; nombre: string; icono: string | null; orden: number; is_active: boolean }[]) ?? [],
+    )
     setLoading(false)
   }, [])
 
@@ -52,8 +59,11 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
       setError('El nombre es obligatorio.')
       return
     }
-    const ok = await run(() => createTipo(nombre.trim()))
-    if (ok) setNombre('')
+    const ok = await run(() => createTipo(nombre.trim(), icono))
+    if (ok) {
+      setNombre('')
+      setIcono(DEFAULT_TIPO_ICON)
+    }
   }
 
   const handleRename = async (id: string) => {
@@ -61,7 +71,7 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
       setError('El nombre es obligatorio.')
       return
     }
-    const ok = await run(() => updateTipo(id, { nombre: editName.trim() }))
+    const ok = await run(() => updateTipo(id, { nombre: editName.trim(), icono: editIcono }))
     if (ok) setEditingId(null)
   }
 
@@ -94,8 +104,8 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
           </button>
         </div>
 
-        <div className="flex items-end gap-2">
-          <div className="flex flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex min-w-[8rem] flex-1 flex-col gap-1">
             <label htmlFor="nuevo-tipo" className="text-small font-medium text-neutral-900">
               Nuevo tipo
             </label>
@@ -105,6 +115,26 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
               onChange={(e) => setNombre(e.target.value)}
               className="rounded-sm border border-neutral-300 px-3 py-2 text-body"
             />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="nuevo-tipo-icono" className="text-small font-medium text-neutral-900">
+              Ícono
+            </label>
+            <div className="flex items-center gap-2">
+              <i className={`${icono} text-h3 text-primary`} aria-hidden="true" />
+              <select
+                id="nuevo-tipo-icono"
+                value={icono}
+                onChange={(e) => setIcono(e.target.value)}
+                className="rounded-sm border border-neutral-300 px-2 py-2 text-body"
+              >
+                {TIPO_ICONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <Button size="sm" type="button" onClick={() => void handleCreate()} disabled={busy}>
             Agregar
@@ -128,6 +158,18 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
                       onChange={(e) => setEditName(e.target.value)}
                       className="flex-1 rounded-sm border border-neutral-300 px-2 py-1 text-body"
                     />
+                    <select
+                      aria-label="Ícono"
+                      value={editIcono}
+                      onChange={(e) => setEditIcono(e.target.value)}
+                      className="rounded-sm border border-neutral-300 px-2 py-1 text-body"
+                    >
+                      {TIPO_ICONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                     <button
                       type="button"
                       onClick={() => void handleRename(t.id)}
@@ -146,15 +188,22 @@ export function TypeManagerModal({ open, onClose }: TypeManagerModalProps) {
                   </>
                 ) : (
                   <>
-                    <span className="flex-1 text-body text-neutral-900">
-                      {t.nombre}
-                      {!t.is_active && <span className="text-small text-neutral-500"> (inactivo)</span>}
+                    <span className="flex flex-1 items-center gap-2 text-body text-neutral-900">
+                      <i
+                        className={`${t.icono ?? DEFAULT_TIPO_ICON} text-h3 text-primary`}
+                        aria-hidden="true"
+                      />
+                      <span>
+                        {t.nombre}
+                        {!t.is_active && <span className="text-small text-neutral-500"> (inactivo)</span>}
+                      </span>
                     </span>
                     <button
                       type="button"
                       onClick={() => {
                         setEditingId(t.id)
                         setEditName(t.nombre)
+                        setEditIcono(t.icono ?? DEFAULT_TIPO_ICON)
                       }}
                       className="text-small font-medium text-primary"
                     >

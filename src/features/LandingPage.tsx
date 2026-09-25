@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
 import { AdsCarousel } from '../components/ads/AdsCarousel'
+import { TipoQuickButtons } from '../components/catalog/TipoQuickButtons'
 import { useAds } from '../hooks/useAds'
+import { useTiposInmueble } from '../hooks/useTiposInmueble'
 
 export function LandingPage() {
   const { ads, loading } = useAds()
+  const { tipos } = useTiposInmueble()
 
   return (
     <div className="flex flex-col gap-4">
@@ -24,6 +27,8 @@ export function LandingPage() {
           />
         )}
       </section>
+
+      <TipoQuickButtons tipos={tipos} />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Link

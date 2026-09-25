@@ -15,6 +15,8 @@ export interface TipoInmueble {
   id: string
   nombre: string
   orden: number
+  /** Clase de Remix Icon (ej. `ri-building-4-fill`). */
+  icono: string | null
   is_active: boolean
   created_at: string
   updated_at: string

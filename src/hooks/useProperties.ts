@@ -28,13 +28,17 @@ export const DEFAULT_FILTERS: PropertyFilters = {
 /** Columnas + relación del tipo para mostrar su nombre en las tarjetas. */
 export const PROPERTY_SELECT = '*, tipo:tipos_inmueble(nombre)'
 
-export function useProperties() {
+/** `initialTipoId` permite abrir el catálogo ya filtrado por tipo (deep-link). */
+export function useProperties(initialTipoId = '') {
   const [properties, setProperties] = useState<Property[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState<PropertyFilters>({
+    ...DEFAULT_FILTERS,
+    tipoId: initialTipoId,
+  })
 
   const fetchProperties = useCallback(async () => {
     setLoading(true)

@@ -6,7 +6,15 @@ import { DEFAULT_FILTERS } from '../../hooks/useProperties'
 import type { Estado, TipoInmueble } from '../../types'
 
 const tipos: TipoInmueble[] = [
-  { id: 't1', nombre: 'Apartamento', orden: 1, is_active: true, created_at: '', updated_at: '' },
+  {
+    id: 't1',
+    nombre: 'Apartamento',
+    icono: 'ri-building-4-fill',
+    orden: 1,
+    is_active: true,
+    created_at: '',
+    updated_at: '',
+  },
 ]
 
 const estados: Estado[] = [

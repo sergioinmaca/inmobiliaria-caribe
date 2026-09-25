@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { RequireRole } from '../features/admin/RequireRole'
 import { AdminLayout } from '../components/layout/AdminLayout'
 import { PublicLayout } from '../components/layout/PublicLayout'
+import { BrowseTransitionLayout } from '../components/layout/BrowseTransitionLayout'
 
 const LandingPage = lazy(() =>
   import('../features/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -30,8 +31,10 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/catalogo" element={<CatalogPage />} />
+        <Route element={<BrowseTransitionLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/catalogo" element={<CatalogPage />} />
+        </Route>
         <Route path="/inmueble/:id" element={<PropertyDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Route>

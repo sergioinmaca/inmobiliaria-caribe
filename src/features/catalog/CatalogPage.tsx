@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Filters } from '../../components/catalog/Filters'
 import { Pagination } from '../../components/catalog/Pagination'
 import { PropertyCard } from '../../components/catalog/PropertyCard'
@@ -7,10 +9,21 @@ import { useTerritorio } from '../../hooks/useTerritorio'
 import { ITEMS_PER_PAGE } from '../../lib/constants'
 
 export function CatalogPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tipoParam = searchParams.get('tipo') ?? ''
   const { properties, total, page, setPage, loading, error, filters, setFilters, refetch } =
-    useProperties()
+    useProperties(tipoParam)
   const { tipos } = useTiposInmueble()
   const { estados } = useTerritorio()
+
+  useEffect(() => {
+    const current = searchParams.get('tipo') ?? ''
+    if (filters.tipoId === current) return
+    const next = new URLSearchParams(searchParams)
+    if (filters.tipoId) next.set('tipo', filters.tipoId)
+    else next.delete('tipo')
+    setSearchParams(next, { replace: true })
+  }, [filters.tipoId, searchParams, setSearchParams])
 
   return (
     <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-8">
