@@ -15,11 +15,11 @@ export function BrowseTransitionLayout() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="grid">
+      <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)]">
         <AnimatePresence initial={false}>
           <m.div
             key={location.pathname}
-            className="col-start-1 row-start-1"
+            className="col-start-1 row-start-1 min-w-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
