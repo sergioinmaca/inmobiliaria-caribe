@@ -10,21 +10,25 @@ export function LandingPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="relative left-1/2 -mt-6 w-screen -translate-x-1/2">
+      <section className="relative left-1/2 mt-1 w-screen -translate-x-1/2 px-6 lg:px-8">
         {loading ? (
-          <div
-            role="status"
-            aria-label="Cargando publicidad"
-            className="aspect-[2.5/1] w-full animate-pulse bg-neutral-200 lg:aspect-[4/1]"
-          />
+          <div className="overflow-hidden rounded-lg border border-neutral-300 bg-white shadow-sm">
+            <div
+              role="status"
+              aria-label="Cargando publicidad"
+              className="aspect-[2.5/1] w-full animate-pulse bg-neutral-200 lg:aspect-[4/1]"
+            />
+          </div>
         ) : ads.length > 0 ? (
           <AdsCarousel ads={ads} />
         ) : (
-          <img
-            src="/brand/banner_landing.png"
-            alt="Inmobiliaria Municipal Caribe"
-            className="w-full object-cover lg:max-h-[420px]"
-          />
+          <div className="overflow-hidden rounded-lg border border-neutral-300 bg-white shadow-sm">
+            <img
+              src="/brand/banner_landing.png"
+              alt="Inmobiliaria Municipal Caribe"
+              className="w-full object-cover lg:max-h-[420px]"
+            />
+          </div>
         )}
       </section>
 

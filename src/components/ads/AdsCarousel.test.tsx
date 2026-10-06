@@ -46,10 +46,10 @@ describe('AdsCarousel', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/ads/2.webp')
+    expect(await screen.findByAltText('Anuncio 2')).toHaveAttribute('src', '/ads/2.webp')
 
     await user.click(screen.getByRole('button', { name: 'Anterior' }))
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/ads/1.webp')
+    expect(await screen.findByAltText('Anuncio 1')).toHaveAttribute('src', '/ads/1.webp')
   })
 
   it('renderiza como enlace si tiene link_url', () => {
