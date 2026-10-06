@@ -81,7 +81,7 @@ Dashboard → **Edge Functions → Secrets** (o `supabase secrets set`). Confirm
 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | automáticos | sí |
 | `APPS_SCRIPT_URL` | URL del Web App de Apps Script | sí |
 | `APPS_SCRIPT_SECRET` | mismo valor que `SCRIPT_SECRET` | sí |
-| `ALLOWED_ORIGINS` | `https://inmobiliaria-caribe.com,http://localhost:5173` | opcional* |
+| `ALLOWED_ORIGINS` | `https://inmobiliariamunicipalcaribe.com,https://www.inmobiliariamunicipalcaribe.com,http://localhost:5173` | opcional* |
 
 \* Si no se define, CORS usa por defecto el dominio productivo + localhost.
 

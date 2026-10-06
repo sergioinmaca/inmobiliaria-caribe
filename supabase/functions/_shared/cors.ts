@@ -3,8 +3,8 @@
 // Si no se define, se usa una lista por defecto (dominio productivo + desarrollo local).
 
 const DEFAULT_ORIGINS = [
-  'https://inmobiliaria-caribe.com',
-  'https://www.inmobiliaria-caribe.com',
+  'https://inmobiliariamunicipalcaribe.com',
+  'https://www.inmobiliariamunicipalcaribe.com',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ]
@@ -21,13 +21,13 @@ export function allowedOrigins(): string[] {
 export function corsHeadersFor(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') ?? ''
   const allowed = allowedOrigins()
-  const allowOrigin = allowed.includes(origin) ? origin : (allowed[0] ?? '*')
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
+  const headers: Record<string, string> = {
     'Vary': 'Origin',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
+  if (origin && allowed.includes(origin)) headers['Access-Control-Allow-Origin'] = origin
+  return headers
 }
 
 /** Añade/sobrescribe las cabeceras CORS en una respuesta. */

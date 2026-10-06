@@ -168,7 +168,7 @@ await new Promise((r) => setTimeout(r, wait))
 - **Por qué importa:** si el código se comparte, el secreto se filtra; CORS `*` permite invocar las
   funciones desde cualquier sitio.
 - **Corrección:** leer el secreto desde `PropertiesService.getScriptProperties()`; restringir CORS al
-  dominio real (`https://inmobiliaria-caribe.com`) y a `http://localhost:5173` en desarrollo (cambio
+  dominio real (`https://inmobiliariamunicipalcaribe.com`) y a `http://localhost:5173` en desarrollo (cambio
   centralizado en `_shared/cors.ts`).
 
 ### 3.9 Sin paginación / sin orden explícito
